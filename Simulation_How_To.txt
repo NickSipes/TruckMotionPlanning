@@ -4,22 +4,22 @@ Assumptions:
 - You have a virtual machine set up running Ubuntu 18.04
 - You have MATLAB installed on the machine running the virtual machine
 
-Note: If you are getting errors trying to install ROS components or get errors about a public key being unavailable, follow the steps in this link:
-   http://answers.ros.org/question/325039/apt-update-fails-cannot-install-pkgs-key-not-working/
-
 1) Install ROS (Gazebo 9 comes with the installation) and set up your workspace per the link: http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment
+  - Step 1.3:  if the key doesn't work follow this link: 
+    http://answers.ros.org/question/325039/apt-update-fails-cannot-install-pkgs-key-not-working/
 2) Install ros_control and ros_controllers per the link (step 7): http://wiki.ros.org/ros_control
-3) Install bazebo_ros_pkgs: http://gazebosim.org/tutorials?tut=ros_installing&cat=connect_ros
+3) Install gazebo_ros_pkgs: http://gazebosim.org/tutorials?tut=ros_installing&cat=connect_ros (may be unncessary as nothing new was installed for me.)
 4) Add the following lines to the end of .bashrc (a hidden file in your Home folder).  The first line is one you would have to run in the terminal if not included here.  The second two allow MATLAB and the ROS nodes on the virtual machine to communicate.  Otherwise they would use a short hand notation when initialized that the other won't recognize.
-   source /opt/ros/melodic/setup.bash
+   source /opt/ros/melodic/setup.bash #(not necessary if you followed step 1 fully)
    export ROS_IP=(Insert the virual machine IP Address)
-   export ROS_MASTER_URI=http://(Insert the virtual machine IP Address:11311
+   export ROS_MASTER_URI=http://(Insert the virtual machine IP Address):11311
 5) Add the following line to the end of .profile (another hidden file in your Home folder).  This line is necessary to allow Gazebo to run at ~60 frames per second, vice 4.
    export SVGA_VGPU10=0
 6) Copy the rbe550_semi_... folders from github into the ~/catkin_ws/src folder.
 7) Copy the Semi_Start.sh file to your Home directory.
-8) Run the following command to allow the Semi_Start.sh file to be executed.
+8) Run the following commands to allow the Semi_Start.sh file to be executed.
+   cd ..
    chmod +x ./Semi_Start.sh
-9) You can now Run the Semi Truck by typing the below command in a terminal:
+9) You can now Run the Semi Truck by typing the below command in a terminal, but it's probably worth a reboot at this point first:
    ./Semi_Start.sh
    
