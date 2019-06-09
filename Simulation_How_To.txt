@@ -4,6 +4,9 @@ Assumptions:
 - You have a virtual machine set up running Ubuntu 18.04
 - You have MATLAB installed on the machine running the virtual machine
 
+Note: If you are getting errors trying to install ROS components or get errors about a public key being unavailable, follow the steps in this link:
+   http://answers.ros.org/question/325039/apt-update-fails-cannot-install-pkgs-key-not-working/
+
 1) Install ROS (Gazebo 9 comes with the installation) and set up your workspace per the link: http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment
 2) Install ros_control and ros_controllers per the link (step 7): http://wiki.ros.org/ros_control
 3) Install bazebo_ros_pkgs: http://gazebosim.org/tutorials?tut=ros_installing&cat=connect_ros
