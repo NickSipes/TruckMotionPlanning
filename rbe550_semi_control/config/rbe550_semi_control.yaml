@@ -1,0 +1,23 @@
+semitruck:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50  
+
+  # Position Controllers ---------------------------------------
+  left_steer_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: semitruck__front_left_steer
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  right_steer_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: semitruck__front_right_steer
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  drive1_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: semitruck__rear1
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  drive2_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: semitruck__rear2
+    pid: {p: 100.0, i: 0.01, d: 10.0}
