@@ -8,7 +8,18 @@
     <origin rpy="0  0  0" xyz="0.03146  2.0878   2.02402"/>
     <axis xyz="0  0  1"/>
     <limit effort="0.0" lower="-0.785" upper="0.785" velocity="0.0"/>
+    <dynamics damping="0.7" friction="1" />
   </joint>
+  <transmission name="semitruck__fifth_wheel_free">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="semitruck__fifth_wheel">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="fifth_wheel_free">
+      <mechanicalReduction>1</mechanicalReduction>
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </actuator>
+  </transmission>
 
 <!-- Front Left Wheel  Joints-->
   <joint name="semitruck__front_left_steer" type="revolute">
@@ -16,7 +27,8 @@
     <child link="semitruck__front_left_wheel_steering_block"/>
     <origin rpy="0  0  0" xyz="0.8     -3.2395   0.47022"/>
     <axis xyz="0  0  1"/>
-    <limit effort="0.0" lower="-0.8727" upper="0.8727" velocity="0.0"/>
+    <limit effort="10000.0" lower="-0.8727" upper="0.8727" velocity="100.0"/>
+    <dynamics damping="0.7" friction="1" />
   </joint>
   <transmission name="front_left_steer_trans">
     <type>transmission_interface/SimpleTransmission</type>
@@ -28,12 +40,13 @@
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </actuator>
   </transmission>
-  <joint name="semitruck__front_left_drive" type="revolute">
+  <joint name="semitruck__front_left_drive" type="continuous">
     <parent link="semitruck__front_left_wheel_steering_block"/>
     <child link="semitruck__front_left_wheel"/>
     <origin rpy="0  0  0" xyz="0.17623  0       0"/>
     <axis xyz="1  0  0"/>
-    <limit effort="0.0" lower="-1e+16" upper="1e+16" velocity="0.0"/>
+    <limit effort="10000.0" velocity="100.0"/>
+    <dynamics damping="0.7" friction="1" />
   </joint>
 
 <!-- Frint Right Wheel Joints-->
@@ -42,7 +55,8 @@
     <child link="semitruck__front_right_wheel_steering_block"/>
     <origin rpy="0  0  0" xyz="-0.8     -3.2395   0.47022"/>
     <axis xyz="0  0  1"/>
-    <limit effort="0.0" lower="-0.8727" upper="0.8727" velocity="0.0"/>
+    <limit effort="10000.0" lower="-0.8727" upper="0.8727" velocity="100.0"/>
+    <dynamics damping="0.7" friction="1" />
   </joint>
   <transmission name="front_right_steer_trans">
     <type>transmission_interface/SimpleTransmission</type>
@@ -54,21 +68,23 @@
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </actuator>
   </transmission>
-  <joint name="semitruck__front_right_drive" type="revolute">
+  <joint name="semitruck__front_right_drive" type="continuous">
     <parent link="semitruck__front_right_wheel_steering_block"/>
     <child link="semitruck__front_right_wheel"/>
     <origin rpy="0  0  0" xyz="-0.17623  0       0"/>
     <axis xyz="1  0  0"/>
-    <limit effort="0.0" lower="-1e+16" upper="1e+16" velocity="0.0"/>
+    <limit effort="10000.0" velocity="100.0"/>
+    <dynamics damping="0.7" friction="1" />
   </joint>
 
 <!-- Other Wheels  Joints-->
-  <joint name="semitruck__rear1" type="revolute">
+  <joint name="semitruck__rear1" type="continuous">
     <parent link="semitruck__cab"/>
     <child link="semitruck__rear_wheel1"/>
     <origin rpy="0  0  0" xyz="0       1.53513  0.47022"/>
     <axis xyz="1  0  0"/>
-    <limit effort="0.0" lower="-1e+16" upper="1e+16" velocity="0.0"/>
+    <limit effort="10000.0" velocity="100.0"/>
+    <dynamics damping="0.7" friction="1" />
   </joint>
   <transmission name="rear1_trans">
     <type>transmission_interface/SimpleTransmission</type>
@@ -81,12 +97,13 @@
     </actuator>
   </transmission>
 
-  <joint name="semitruck__rear2" type="revolute">
+  <joint name="semitruck__rear2" type="continuous">
     <parent link="semitruck__cab"/>
     <child link="semitruck__rear_wheel2"/>
     <origin rpy="0  0  0" xyz="0       2.65578  0.47022"/>
     <axis xyz="1  0  0"/>
-    <limit effort="0.0" lower="-1e+16" upper="1e+16" velocity="0.0"/>
+    <limit effort="10000.0" velocity="100.0"/>
+    <dynamics damping="0.7" friction="1" />
   </joint>
   <transmission name="rear2_trans">
     <type>transmission_interface/SimpleTransmission</type>
@@ -99,20 +116,22 @@
     </actuator>
   </transmission>
 
-  <joint name="semitruck__rear3" type="revolute">
+  <joint name="semitruck__rear3" type="continuous">
     <parent link="semitruck__trailer"/>
     <child link="semitruck__rear_wheel3"/>
     <origin rpy="0  0  0" xyz="-0.03146  10.99998  -1.5538"/>
     <axis xyz="1  0  0"/>
-    <limit effort="0.0" lower="-1e+16" upper="1e+16" velocity="0.0"/>
+    <limit effort="0.0" velocity="0.0"/>
+    <dynamics damping="0.7" friction="1" />
   </joint>
 
-  <joint name="semitruck__rear4" type="revolute">
+  <joint name="semitruck__rear4" type="continuous">
     <parent link="semitruck__trailer"/>
     <child link="semitruck__rear_wheel4"/>
     <origin rpy="0  0  0" xyz="-0.03146  12.11072  -1.5538"/>
     <axis xyz="1  0  0"/>
-    <limit effort="0.0" lower="-1e+16" upper="1e+16" velocity="0.0"/>
+    <limit effort="0.0" velocity="0.0"/>
+    <dynamics damping="0.7" friction="1" />
   </joint>
 
 <!-- Trailer Body -->
@@ -122,16 +141,15 @@
       <origin rpy="0  0  0" xyz="0       0       0.39173"/>
       <inertia ixx="121449.510163652" ixy="0" ixz="0" iyy="6087.32112493" iyz="0" izz="121452.253785888"/>
     </inertial>
-    <collision name="semitruck__collision">
+    <collision>
       <origin rpy="0  0  0" xyz="0       7       0.39173"/>
       <geometry>
         <box size="2.591 16.156993521 2.589832471"/>
       </geometry>
     </collision>
-    <visual name="semitruck__visual">
+    <visual>
       <origin rpy="0  0  0" xyz="0       7       0.39173"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <box size="2.591 16.156993521 2.589832471"/>
       </geometry>
     </visual>
@@ -155,56 +173,51 @@
       <origin rpy="0  0  0" xyz="0  -0.2 -0.5"/>
       <inertia ixx="22831.804454735" ixy="0" ixz="0" iyy="11801.392026984" iyz="0" izz="19031.257370538"/>
     </inertial>
-    <!-- Removed due to colliding with front wheels
-    <collision name="semitruck__collision1">
+    <collision>
       <origin rpy="0  0  0" xyz="0.00484 -1.99062  0.9116"/>
       <geometry>
         <box size="2.066777679 4.45124915 1.094685077"/>
       </geometry>
-    </collision -->
-    <collision name="semitruck__collision3">
+    </collision>
+    <collision>
       <origin rpy="0  0  0" xyz="0.00484 -1.25435  2.00632"/>
       <geometry>
         <box size="2.039343709 2.911903019 1.094763831"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision4">
+    <collision>
       <origin rpy="0.33294  0       0" xyz="0.00484 -1.11043  2.48075"/>
       <geometry>
         <box size="2.039343709 2.441375202 0.945048465"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision5">
+    <collision>
       <origin rpy="0  0  0" xyz="0.00484  1.63918  0.82474"/>
       <geometry>
         <box size="1.21561 2.87523 0.29854"/>
       </geometry>
     </collision>
-    <visual name="semitruck__visual1">
+    <visual>
       <origin rpy="0  0  0" xyz="0.00484 -1.99062  0.9116"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <box size="2.066777679 4.45124915 1.094685077"/>
       </geometry>
     </visual>
-    <visual name="semitruck__visual3">
+    <visual>
       <origin rpy="0  0  0" xyz="0.00484 -1.25435  2.00632"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <box size="2.039343709 2.911903019 1.094763831"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual4">
+    <visual>
       <origin rpy="0  0  0" xyz="0.00484 -1.11043  2.48075"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <box size="2.039343709 2.441375202 0.945048465"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual5">
+    <visual>
       <origin rpy="0  0  0" xyz="0.00484  1.63918  0.82474"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <box size="1.21561 2.87523 0.29854"/>
       </geometry>
     </visual>
@@ -220,55 +233,51 @@
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <inertia ixx="21.208148357" ixy="0" ixz="0" iyy="21.208148357" iyz="0" izz="3.979923271"/>
     </inertial>
-    <collision name="semitruck__collision1">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="1.12178  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision2">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="0.79986  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision3">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="-0.79986  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision4">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="-1.12178  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <visual name="semitruck__visual1">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="1.12178  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </visual>
-    <visual name="semitruck__visual2">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="0.79986  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual3">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="-0.79986  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual4">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="-1.12178  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </visual>
@@ -286,55 +295,51 @@
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <inertia ixx="21.208148357" ixy="0" ixz="0" iyy="21.208148357" iyz="0" izz="3.979923271"/>
     </inertial>
-    <collision name="semitruck__collision1">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="1.12178  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision2">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="0.79986  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision3">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="-0.79986  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision4">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="-1.12178  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <visual name="semitruck__visual1">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="1.12178  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual2">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="0.79986  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </visual>
-    <visual name="semitruck__visual3">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="-0.79986  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual4">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="-1.12178  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </visual>
@@ -352,55 +357,51 @@
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <inertia ixx="21.208148357" ixy="0" ixz="0" iyy="21.208148357" iyz="0" izz="3.979923271"/>
     </inertial>
-    <collision name="semitruck__collision1">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="1.12178  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision2">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="0.79986  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision3">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="-0.79986  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision4">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="-1.12178  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <visual name="semitruck__visual1">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="1.12178  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual2">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="0.79986  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual3">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="-0.79986  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual4">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="-1.12178  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
@@ -418,55 +419,51 @@
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <inertia ixx="21.208148357" ixy="0" ixz="0" iyy="21.208148357" iyz="0" izz="3.979923271"/>
     </inertial>
-    <collision name="semitruck__collision1">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="1.12178  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision2">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="0.79986  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision3">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="-0.79986  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <collision name="semitruck__collision4">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="-1.12178  0       0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <visual name="semitruck__visual1">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="1.12178  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual2">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="0.79986  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual3">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="-0.79986  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
-    <visual name="semitruck__visual4">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="-1.12178  0       0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
@@ -484,16 +481,15 @@
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <inertia ixx="0.559461036" ixy="0" ixz="0" iyy="0.559461036" iyz="0" izz="0.994980818"/>
     </inertial>
-    <collision name="semitruck__collision1">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <visual name="semitruck__visual">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
@@ -511,7 +507,7 @@
       <origin rpy="0  0  0" xyz="0  0  0"/>
       <inertia ixx="0.000633333" ixy="0.0" ixz="0.0" iyy="0.000633333" iyz="0.0" izz="0.00125"/>
     </inertial>
-    <collision name="semitruck__collision">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <geometry>
         <cylinder length="0.01" radius="0.05"/>
@@ -524,22 +520,21 @@
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <inertia ixx="0.559461036" ixy="0" ixz="0" iyy="0.559461036" iyz="0" izz="0.994980818"/>
     </inertial>
-    <collision name="semitruck__collision1">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <geometry>
         <cylinder length="0.28745" radius="0.47022"/>
       </geometry>
     </collision>
-    <visual name="semitruck__visual">
+    <visual>
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <geometry>
-        <!-- mesh filename="package://rbe550_semi_description/meshes/semi.dae" scale="0.01 0.01 0.01"/ -->
         <cylinder length="0.28745" radius="0.47022"/> 
       </geometry>
     </visual>
   </link>
   <gazebo reference="semitruck__front_right_wheel">
-    <material>Gazebo/Black</material>
+    <material> Gazebo/Black </material>
     <mu1 value="100.0"/>
     <mu2 value="100.0"/>
     <kp value="10000000.0" />
@@ -551,7 +546,7 @@
       <origin rpy="0  0  0" xyz="0  0  0"/>
       <inertia ixx="0.000633333" ixy="0.0" ixz="0.0" iyy="0.000633333" iyz="0.0" izz="0.00125"/>
     </inertial>
-    <collision name="semitruck__collision">
+    <collision>
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <geometry>
         <cylinder length="0.01" radius="0.05"/>
@@ -559,7 +554,7 @@
     </collision>
   </link>
   <gazebo>
-    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+    <plugin filename="libgazebo_ros_control.so" name="gazebo_ros_control">
       <robotNamespace>/semitruck</robotNamespace>
     </plugin>
   </gazebo>
