@@ -13,11 +13,15 @@ semitruck:
     type: effort_controllers/JointPositionController
     joint: semitruck__front_right_steer
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  drive1_position_controller:
-    type: effort_controllers/JointPositionController
+  drive1_velocity_controller:
+    type: effort_controllers/JointVelocityController
     joint: semitruck__rear1
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  drive2_position_controller:
-    type: effort_controllers/JointPositionController
+  drive2_velocity_controller:
+    type: effort_controllers/JointVelocityController
     joint: semitruck__rear2
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  fifth_wheel_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: semitruck__fifth_wheel
     pid: {p: 100.0, i: 0.01, d: 10.0}
