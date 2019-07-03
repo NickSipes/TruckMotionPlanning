@@ -4,10 +4,18 @@
 <!-- Fifth Wheel Joint-->
   <joint name="semitruck__fifth_wheel" type="revolute">
     <parent link="semitruck__cab"/>
-    <child link="semitruck__trailer"/>
+    <child link="semitruck__5th_wheel_2DOF_block"/>
     <origin rpy="0  0  0" xyz="0.03146  2.0878   2.02402"/>
     <axis xyz="0  0  1"/>
-    <limit effort="0.0" lower="-0.785" upper="0.785" velocity="0.0"/>
+    <limit effort="0.0" lower="-1.3" upper="1.3" velocity="0.0"/>
+    <dynamics damping="0.7" friction="1" />
+  </joint>
+  <joint name="semitruck__fifth_wheel_2DOF" type="revolute">
+    <parent link="semitruck__5th_wheel_2DOF_block"/>
+    <child link="semitruck__trailer"/>
+    <origin rpy="0  0  0" xyz="0  0       0.1"/>
+    <axis xyz="1  0  0"/>
+    <limit effort="0.0" velocity="0.0"/>
     <dynamics damping="0.7" friction="1" />
   </joint>
   <transmission name="semitruck__fifth_wheel_free">
@@ -137,7 +145,7 @@
 <!-- Trailer Body -->
   <link name="semitruck__trailer">
     <inertial>
-      <mass value="5443"/>
+      <mass value="54.43"/>
       <origin rpy="0  0  0" xyz="0       0       0.39173"/>
       <inertia ixx="121449.510163652" ixy="0" ixz="0" iyy="6087.32112493" iyz="0" izz="121452.253785888"/>
     </inertial>
@@ -154,10 +162,34 @@
       </geometry>
     </visual>
   </link>
+
+  <link name="semitruck__5th_wheel_2DOF_block">
+    <inertial>
+      <mass value="1"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000633333" ixy="0.0" ixz="0.0" iyy="0.000633333" iyz="0.0" izz="0.00125"/>
+    </inertial>
+    <collision>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <geometry>
+        <cylinder length="0.01" radius="0.05"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <geometry>
+        <cylinder length="0.21" radius="0.25"/>
+      </geometry>
+    </visual>
+  </link>
+
   <gazebo reference="semitruck__trailer">
-    <material>Gazebo/Grey</material>
+    <material>Gazebo/White</material>
   </gazebo>
 
+  <gazebo reference="semitruck__5th_wheel_2DOF_block">
+    <material>Gazebo/Green</material>
+  </gazebo>
 <!-- Dummy base link to allow inertia on the cab. -->
   <link name="dummy"/>
   <joint name="dummy_joint" type="fixed">
@@ -169,7 +201,7 @@
 <!-- Cab Link -->
   <link name="semitruck__cab">
     <inertial>
-      <mass value="9072"/>
+      <mass value="90.72"/>
       <origin rpy="0  0  0" xyz="0  -0.2 -0.5"/>
       <inertia ixx="22831.804454735" ixy="0" ixz="0" iyy="11801.392026984" iyz="0" izz="19031.257370538"/>
     </inertial>
@@ -226,7 +258,7 @@
     <material>Gazebo/Red</material>
   </gazebo>
 
-<!-- Wheel Links  -->
+<!-- Cab Rear Wheels  -->
   <link name="semitruck__rear_wheel1">
     <inertial>
       <mass value="36"/>
@@ -284,9 +316,9 @@
   </link>
   <gazebo reference="semitruck__rear_wheel1">
     <material>Gazebo/Black</material>
-    <mu1 value="100.0"/>
+    <mu1 value="400.0"/>
     <mu2 value="100.0"/>
-    <kp value="10000000.0" />
+    <kp value="100000000.0" />
     <kd value="1.0" />
   </gazebo>
   <link name="semitruck__rear_wheel2">
@@ -346,11 +378,12 @@
   </link>
   <gazebo reference="semitruck__rear_wheel2">
     <material>Gazebo/Black</material>
-    <mu1 value="100.0"/>
+    <mu1 value="400.0"/>
     <mu2 value="100.0"/>
-    <kp value="10000000.0" />
+    <kp value="100000000.0" />
     <kd value="1.0" />
   </gazebo>
+<!-- Trailer Wheels -->
   <link name="semitruck__rear_wheel3">
     <inertial>
       <mass value="36"/>
@@ -408,9 +441,9 @@
   </link>
   <gazebo reference="semitruck__rear_wheel3">
     <material>Gazebo/Black</material>
-    <mu1 value="100.0"/>
+    <mu1 value="400.0"/>
     <mu2 value="100.0"/>
-    <kp value="10000000.0" />
+    <kp value="100000000.0" />
     <kd value="1.0" />
   </gazebo>
   <link name="semitruck__rear_wheel4">
@@ -470,11 +503,12 @@
   </link>
   <gazebo reference="semitruck__rear_wheel4">
     <material>Gazebo/Black</material>
-    <mu1 value="100.0"/>
+    <mu1 value="400.0"/>
     <mu2 value="100.0"/>
-    <kp value="10000000.0" />
+    <kp value="100000000.0" />
     <kd value="1.0" />
   </gazebo>
+<!-- Cab Front Wheels -->
   <link name="semitruck__front_left_wheel">
     <inertial>
       <mass value="9"/>
@@ -496,9 +530,9 @@
   </link>
   <gazebo reference="semitruck__front_left_wheel">
     <material>Gazebo/Black</material>
-    <mu1 value="100.0"/>
+    <mu1 value="400.0"/>
     <mu2 value="100.0"/>
-    <kp value="10000000.0" />
+    <kp value="100000000.0" />
     <kd value="1.0" />
   </gazebo>
   <link name="semitruck__front_left_wheel_steering_block">
@@ -510,7 +544,7 @@
     <collision>
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.05"/>
+        <cylinder length="0.21" radius="0.15"/>
       </geometry>
     </collision>
   </link>
@@ -535,9 +569,9 @@
   </link>
   <gazebo reference="semitruck__front_right_wheel">
     <material> Gazebo/Black </material>
-    <mu1 value="100.0"/>
+    <mu1 value="400.0"/>
     <mu2 value="100.0"/>
-    <kp value="10000000.0" />
+    <kp value="100000000.0" />
     <kd value="1.0" />
   </gazebo>
   <link name="semitruck__front_right_wheel_steering_block">
@@ -549,7 +583,7 @@
     <collision>
       <origin rpy="0      1.5707  0" xyz="0  0  0"/>
       <geometry>
-        <cylinder length="0.01" radius="0.05"/>
+        <cylinder length="0.21" radius="0.15"/>
       </geometry>
     </collision>
   </link>
