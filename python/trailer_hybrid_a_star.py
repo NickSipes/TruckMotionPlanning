@@ -5,8 +5,9 @@ import matplotlib as plt
 import math
 import numpy as np
 import kdtree as kd
+import operator
 
-# TODO resolve the following Julia packages: DataFrames, NearestNeighbors (should be kdtree)
+# TODO resolve the following Julia packages: DataFrames (numpy?), NearestNeighbors (should be kdtree?)
 
 # TODO download each file from github to incorporate
 import rs_path
@@ -28,7 +29,8 @@ SB_COST = 100           # switchback cost (makes changing directions significant
 BACK_COST = 5           # backwards penalty cost (makes the algorithm favor going forward)
 STEER_CHANGE_COST = 5   # cost to change steering angle
 STEER_COST = 1          # cost to be turning
-JACKKNIF_COST = 200     # cost if a jack knife occurs
+JACKKNIF_COST = 200     # cost used to discourage jackknifes by making paths with hidh difference between yaw and yaw1
+                        # undesireable
 H_COST = 5              # heuristic cost weighting
 
 # Trailer specific parameters from trailerlib
@@ -39,7 +41,7 @@ MAX_STEER = trailerlib.MAX_STEER  # radians, maximum steering angle
 
 class Node: # TODO: implement which inputs can be left blank until needed
     def __init__(self, x_index, y_index, yaw_index, direction, x, y, yaw, yaw1, directions, steer, cost, parent_index):
-        self.xind = x_index         # index of the x position (related to grid structure of Cspace) TODO: understand index
+        self.xind = x_index         # index of the x position (related to grid structure of Cspace)
         self.yind = y_index         # index of the y position (related to grid structure of Cspace)
         self.yawind = yaw_index     # index of the yaw angle
         self.direction = direction  # direction of travel, true=forward, false=backward
@@ -83,6 +85,7 @@ class Path:
         self.yaw1 = yaw1            # radians, trailer angle
         self.direction = direction  # direction of motion (true = forward, false = backward)
         self.cost = cost            # cost TODO which cost?
+
 
 def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyreso, yawreso):
     """
@@ -137,6 +140,36 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
     u, d = calc_motion_inputs()
     nmotion = len(u)
 
+    while open:
+
+        # Obtain the index of the next node
+        c_id = min(pq.iteritems(), key=operator.itemgetter(1))[0]
+
+        # Removed the obtained index from the queue
+        pq.pop(c_id)
+
+        # Get the node with the obtained index and remove it from open
+        current = open.get(c_id)
+        open.pop(c_id)
+
+        # Add the current node to the closed list
+        closed.update({c_id: current})
+
+        # get full data of current node and isupdated flag
+        isupdated, fpath = update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw1)
+
+        if isupdated: # goal has been found
+            fnode = fpath
+            break  # exit the while loop
+
+        inityaw1 = current.yaw1[1]
+
+        # cycle through all inputs and check if each next node is in closed, else add it to open if not already there
+        for i in range(nmotion):
+            node = calc_next_node(current, c_id, u[i], d[i], c)
+# TODO PICK UP HERE
+    if not open:
+        print("Error: Cannot find path, No open nodes remaining.")
 
 def calc_config(ox, oy, xyreso, yawreso):
     """
@@ -263,3 +296,215 @@ def calc_motion_inputs():
         u.append(i)
 
     return u, d
+
+
+def update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw1):
+    """
+    This function updates the current node with "analystic" data TODO don't understand
+    :param current: Node, current node
+    :param ngoal: Node, goal node
+    :param c: Config, configuration space
+    :param ox: meters, list of x positions of each obstacle
+    :param oy: meters, list of y positions of each obstacle
+    :param kdtree: kdtree, KD tree made from ox and oy
+    :param gyaw1: radians, goal position trailer yaw
+    :return:
+    """
+
+    apath = analystic_expantion(current, ngoal, c, ox, oy, kdtree)
+
+    # Formulate data for the "f" node TODO does this mean next node?
+    if apath:  # if apath = [], skip the if statement since there is no path
+        fx = apath.x[2:-1]
+        fy = apath.y[2:-1]
+        fyaw = apath.yaw[2:-1]
+        steps = MOTION_RESOLUTION*apath.directions
+        yaw1 = trailerlib.calc_trailer_yaw_from_xyyaw(apath.x, apath.y, apath.yaw, current.yaw1[-1], steps)
+        # check if the trailer yaw is outside the trailer yaw threshold
+        if abs(rs_path.pi_2_pi(yaw1[-1] - gyaw1)) >= GOAL_TYAW_TH:
+            return False, []  # current node is not the goal node based on trailer alone
+        fcost = current.cost + calc_rs_path_cost(apath, yaw1)  # cost to next node
+        fyaw1 = yaw1[2:-1] # array of trailer yaws
+        fpind = calc_index(current, c)  # index of parent node
+        fd = []  # array of directions
+        for d in apath.directions[2:-1]:
+            if d >= 0:
+                fd.append(True)
+            else:
+                fd.append(False)
+
+        fsteer = 0
+
+        fpath = Node(current.xind, current.yind, current.yawind, current.direction, fx, fy, fyaw, fyaw1, fsteer, fcost,
+                     fpind)
+
+        return True, fpath
+
+    return False, []
+
+
+
+def analystic_expantion(n, ngoal, c, ox, oy, kdtree):
+    """
+    This function determines the least costly path to the next node that doesn't collide with an obstacle
+    TODO verify function purpose
+    :param current: Node, current node
+    :param ngoal: Node, goal node
+    :param c: Config, Cspace
+    :param ox: meters, list of x positions of obstacles
+    :param oy: meters, list of y positions of obstacles
+    :param kdtree: kdtree, KD Tree
+    :return: an RS path leading to the next least costly node that doesn't collide with an obstacle
+    """
+
+    # Extract the x,y, and yaw info from the current node
+    sx = n.x[-1]
+    sy = n.y[-1]
+    syaw = n.yaw[-1]
+
+    # Calculate the sharpest turn possible
+    max_curvature = math.tan(MAX_STEER)/WB
+
+    # Call rs_path to determine the paths available based on current and goal node TODO verify integration with rs_path
+    # TODO determine structure of paths from rs_path.calc_paths
+    paths = rs_path.calc_paths(sx, sy, syaw, ngoal.x[-1], ngoal.y[-1], ngoal.yaw[-1], max_curvature,
+                               step_size=MOTION_RESOLUTION)
+
+    # If there is no available path, stop and return nothing
+    if not paths:
+        return []
+
+    pathqueue = {}  # Dictionary for holding the path and yaw1 information
+
+    # Put the rs path and yaw1 combinations into pathqueue
+    for path in paths:
+        steps = MOTION_RESOLUTION*path.directions
+        yaw1 = trailerlib.calc_trailer_yaw_from_xyyaw(path.x, path.y, path.yaw, n.yaw1[-1], steps)
+        pathqueue.update({path: calc_rs_path_cost(path, yaw1)})
+
+    # Go through each path, starting with the lowest cost, and check for collisions, return the first viable path
+    for i in range(len(pathqueue)):
+        path = min(pathqueue.iteritems(), key=operator.itemgetter(1))[0]  # extract path with lowest cost
+        pathqueue.pop(path)  # remove the lowest cost path from the queue
+
+        # TODO description insert here
+        steps = MOTION_RESOLUTION*path.directions
+        yaw1 = trailerlib.calc_trailer_yaw_from_xyyaw(path.x, path.y, path.yaw, n.yaw1[-1], steps)
+        ind = [i for i in np.arange(1, len(path.x), SKIP_COLLISION_CHECK)]
+        if trailerlib.check_trailer_collision(ox, oy, path.x[ind], path.y[ind], path.yaw[ind], yaw1[ind], kdtree=kdtree):
+            return path
+
+    return []
+
+def calc_rs_path_cost(rspath, yaw1):
+    """
+    This function calculates the total cost for a given RS path and yaw1
+    :param rspath: rs_path.Path, RS path
+    :param yaw1: radians, trailer yaw
+    :return: total cost
+    """
+
+    # Initialize cost
+    cost = 0
+
+    # Update cost for length and direction of path
+    for l in rspath.lengths:
+        if l >= 0:
+            cost += l
+        else:
+            cost += abs(l)*BACK_COST
+
+    # Update cost if direction changes in the path (detected by change in sign of adjacent lengths)
+    for i in (range(len(rspath.lengths)) - 1):
+        if rspath.lengths[i]*rspath.lengths[i+1] < 0:
+            cost += SB_COST
+
+    # Update cost for curved path
+    for ctype in rspath.ctypes:
+        if ctype != "S":
+            cost += STEER_COST*abs(MAX_STEER)
+
+    # Form list of steering inputs
+    nctypes = len(rspath.ctypes)  # number of ctypes in the given path
+    ulist = []  # list used to convert the string ctypes to numbers for cost calculation
+    for i in range(nctypes):
+        if rspath.ctypes[i] == "R":
+            ulist.append(-MAX_STEER)
+        elif rspath.ctypes[i] == "L":
+            ulist.append(MAX_STEER)
+
+    # Update cost for changing direction of turn
+    for i in range(nctypes - 1):
+        cost += STEER_CHANGE_COST*abs(ulist[i+1] - ulist[i])
+
+    # Update cost to prevent jackknifes (the most the trailer folds toward the truck, the higher the cost)
+    cost += JACKKNIF_COST*sum(abs(rs_path.pi_2_pi(rspath.yaw-yaw1)))
+
+    return cost
+
+def calc_next_node(current, c_id, u, d, c):
+    """
+    This function calculates the next node based on the current node and the given inputs.
+    :param current: Node, current node
+    :param c_id: index, index of current node
+    :param u: input, steering input
+    :param d: input, driving input
+    :param c: Config, Cspace
+    :return: TODO return of this function
+    """
+
+    # TODO what is arc_l?
+    arc_l = XY_GRID_RESOLUTION*1.5
+
+    nlist = math.floor(arc_l/MOTION_RESOLUTION) + 1
+
+    # Initial motion from the current node
+    xlist = [current.x[-1] + d*MOTION_RESOLUTION*math.cos(current.yaw[-1])]
+    ylist = [current.y[-1] + d*MOTION_RESOLUTION*math.sin(current.yaw[-1])]
+    yawlist = [rs_path.pi_2_pi(current.yaw[-1] + d*MOTION_RESOLUTION*math.tan(u)/WB)]
+    yaw1list = [rs_path.pi_2_pi(current.yaw1[-1] + d*MOTION_RESOLUTION*math.sin(current.yaw[-1] - current.yaw1[-1])/LT)]
+
+    # Discrete path from current node to the next node for the given inputs
+    for i in range(nlist-1):
+        xlist.append(xlist[-1] + d*MOTION_RESOLUTION*math.cos(yawlist[-1]))
+        ylist.append(ylist[-1] + d*MOTION_RESOLUTION*math.sin(yawlist[-1]))
+        yawlist.append(rs_path.pi_2_pi(yawlist[-1] + d*MOTION_RESOLUTION*math.tan(u)/WB))
+        yaw1list.append(rs_path.pi_2_pi(yaw1list[-1] + d*MOTION_RESOLUTION*math.sin(yawlist[-1] - yaw1list[-1])/LT))
+
+    # Determine the index in each dimension of the next node
+    xind = round(xlist[-1]/c.xyreso)
+    yind = round(ylist[-1]/c.xyreso)
+    yawind = round(yawlist[-1]/c.yawreso)
+
+    # Calculate cost to the next node
+    addedcost = 0  # Initialize cost of moving from current node to the next node
+
+    # Cost of traveling length in given direction
+    if d > 0:
+        direction = True
+        addedcost += abs(arc_l)
+    else:
+        direction = False
+        addedcost += abs(arc_l)*BACK_COST
+
+    # Cost of switching direction
+    if direction != current.direction:  # A direction change occured
+        addedcost += SB_COST
+
+    # Cost of steering
+    addedcost += STEER_COST*abs(u)
+
+    # Cost of changing direction
+    addedcost += STEER_CHANGE_COST*abs(current.steer - u)
+
+    # Cost of acute angle between trailer and tractor
+    addedcost += JACKKNIF_COST*sum(abs(rs_path.pi_2_pi(yawlist - yaw1list)))
+
+    cost = current.cost + addedcost
+
+    # Form list of directions for the node class
+    directions = [direction for i in range(len(xlist))]
+
+    node = Node(xind, yind, yawind, direction, xlist, ylist, yawlist, yaw1list, directions, u, cost, c_id)
+
+    return node
