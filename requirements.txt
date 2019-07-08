@@ -1,9 +1,9 @@
 Python packages:
 
-kdtree?
+kdtree
 math
 matplotlib
-NearestNeighors?
+NearestNeighors
 nodeObject
 numpy
 operator
