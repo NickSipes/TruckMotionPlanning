@@ -4,8 +4,8 @@ by a script that defines the start and goal state and outputs the path (with tim
 import matplotlib as plt
 import math
 import numpy as np
-import kdtree as kd
 import operator
+from scipy import spatial
 
 # TODO resolve the following Julia packages: DataFrames (numpy?), NearestNeighbors (should be kdtree?)
 
@@ -110,7 +110,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
                                                         # input to kd.create
 
     # forms a kd tree from the xy points of the obstacles
-    kdtree = kd.create(oxy)
+    kdtree = spatial.KDTree(oxy)
 
     # Form the configuration space
     c = calc_config(ox, oy, xyreso, yawreso)
@@ -140,7 +140,12 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
     u, d = calc_motion_inputs()
     nmotion = len(u)
 
-    while open:
+    while True:
+
+        # Exit while loop and return nothing if open is expended and a solution is not found
+        if not open:
+            print("Error: Cannot find path, No open nodes remaining.")
+            return []
 
         # Obtain the index of the next node
         c_id = min(pq.iteritems(), key=operator.itemgetter(1))[0]
@@ -167,9 +172,29 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
         # cycle through all inputs and check if each next node is in closed, else add it to open if not already there
         for i in range(nmotion):
             node = calc_next_node(current, c_id, u[i], d[i], c)
-# TODO PICK UP HERE
-    if not open:
-        print("Error: Cannot find path, No open nodes remaining.")
+            if not verify_index(node, c, ox, oy, inityaw1, kdtree):
+                continue  # continue with next node since this node's configuration is invalid
+
+            node_ind = calc_index(node, c)
+
+            # Check if node is already in the closed dictionary
+            if node_ind in closed:
+                continue  # continue with next node since this one is already closed
+
+            # Check if node is already in the open dictionary
+            if node_ind not in open:
+                open.update({node_ind: node})  # add the node to open
+                pq.update({node_ind: calc_cost(node, h_dp, ngoal, c)})  # add the node cost information to pq
+            else:
+                if open[node_ind].cost > node.cost:  # if node is in the open dictionary, but the new node cost is
+                                                     # lower, update the node in open
+                    open[node_ind] = node
+
+    print(f"number of nodes in open and closed = {len(open) + len(closed)}")
+
+    path = get_final_path(closed, fnode, nstart, c)
+
+
 
 def calc_config(ox, oy, xyreso, yawreso):
     """
@@ -314,7 +339,9 @@ def update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw
     apath = analystic_expantion(current, ngoal, c, ox, oy, kdtree)
 
     # Formulate data for the "f" node TODO does this mean next node?
-    if apath:  # if apath = [], skip the if statement since there is no path
+    if apath:  # if apath = [], skip the if statement since there is no path (ignore the unresolved attribute reference
+        # errors as they won't happen since apath is only a list if it is empty and then the if statement is false and
+        # the block doesn't execute)
         fx = apath.x[2:-1]
         fy = apath.y[2:-1]
         fyaw = apath.yaw[2:-1]
@@ -336,7 +363,7 @@ def update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw
         fsteer = 0
 
         fpath = Node(current.xind, current.yind, current.yawind, current.direction, fx, fy, fyaw, fyaw1, fsteer, fcost,
-                     fpind)
+                     fpind) #TODO fix error
 
         return True, fpath
 
@@ -384,7 +411,7 @@ def analystic_expantion(n, ngoal, c, ox, oy, kdtree):
 
     # Go through each path, starting with the lowest cost, and check for collisions, return the first viable path
     for i in range(len(pathqueue)):
-        path = min(pathqueue.iteritems(), key=operator.itemgetter(1))[0]  # extract path with lowest cost
+        path = min(pathqueue.iteritems(), key=operator.itemgetter(1))[0]  # extract path with lowest cost # TODO see error
         pathqueue.pop(path)  # remove the lowest cost path from the queue
 
         # TODO description insert here
@@ -415,7 +442,7 @@ def calc_rs_path_cost(rspath, yaw1):
             cost += abs(l)*BACK_COST
 
     # Update cost if direction changes in the path (detected by change in sign of adjacent lengths)
-    for i in (range(len(rspath.lengths)) - 1):
+    for i in (range(len(rspath.lengths) - 1)):
         if rspath.lengths[i]*rspath.lengths[i+1] < 0:
             cost += SB_COST
 
@@ -508,3 +535,103 @@ def calc_next_node(current, c_id, u, d, c):
     node = Node(xind, yind, yawind, direction, xlist, ylist, yawlist, yaw1list, directions, u, cost, c_id)
 
     return node
+
+
+def verify_index(node, c, ox, oy, inityaw1, kdtree):
+    """
+    This function verifies that the x and y index of the given node are valid and collision free
+    :param node: Node, node to check x and y index of
+    :param c: Config, Cspace
+    :param ox: meters, list of x positions of obstacles
+    :param oy: meters, list of y positions of obstacles
+    :param inityaw1: radians, first increment of yaw1 from the current node configuration
+    :param kdtree: scipy.spatial.KDTree, KD Tree of obstacles
+    :return: boolean, validity of the x and y indexes
+    """
+
+    # Check if the x index is valid
+    if (node.xind - c.minx) >= c.xw:  # x index is too high
+        return False
+    elif (node.xind - c.minx) <= 0:   # x index is too low
+        return False
+
+    if (node.yind - c.miny) >= c.yw:  # y index is too high
+        return False
+    elif (node.yind - c.miny) <= 0:   # y index is too low
+        return False
+
+    # Check if the node collides with an obstacle
+    steps = MOTION_RESOLUTION*node.directions
+    yaw1 = trailerlib.calc_trailer_yaw_from_xyyaw(node.x, node.y, node.yaw, inityaw1, steps)
+    ind = [i for i in np.arange(1, len(node.x), SKIP_COLLISION_CHECK)]
+    if not trailerlib.check_trailer_collision(ox, oy, node.x[ind], node.y[ind], node.yaw[ind], yaw1[ind], kdtree=kdtree):
+        return False
+
+
+    # If none of the above returned false, return true
+    return True
+
+
+def get_final_path(closed, ngoal, nstart, c):
+    """
+    Form the path from the start to the goal based on the closed list (possible due to parent index in each node)
+    :param closed: dict of Node, all closed nodes
+    :param ngoal: Node, goal node
+    :param nstart: Node, start node
+    :param c: Config, Cspace
+    :return:
+    """
+
+    # Initialize recursive list of path parameters
+    rx = ngoal.x.reverse()
+    ry = ngoal.y.reverse()
+    ryaw = ngoal.yaw.reverse()
+    ryaw1 = ngoal.yaw1.reverse()
+    direction = ngoal.directions.reverse()
+    nid = ngoal.pind
+    finalcost = ngoal.cost
+
+    # Form recursive list of path parameters
+    while True:
+        n = closed[nid]
+        rx += n.x.reverse()
+        ry += n.y.reverse()
+        ryaw += n.yaw.reverse()
+        ryaw1 += n.yaw1.reverse()
+        direction += n.directions.reverse()
+        nid = n.pind
+        if is_same_grid(n, nstart):
+            break
+
+    # Reverse the path parameters to start at start and end at goal
+    rx.reverse()
+    ry.reverse()
+    ryaw.reverse()
+    ryaw1.reverse()
+    direction.reverse()
+
+    direction[0] = direction[1]
+
+    path = Path(rx, ry, ryaw, ryaw1, direction, finalcost)
+
+    return path
+
+
+def is_same_grid(node1, node2):
+    """
+    This function determines if two given nodes are in the same grid based on the index (based on resolution)
+    :param node1: Node, a node
+    :param node2: Node, another node
+    :return: boolean, status of being in the same grid
+    """
+
+    if node.xind != node2.xind:
+        return False
+
+    if node.yind != node2.yind:
+        return False
+
+    if node1.yawind != node2.yawind:
+        return False
+
+    return True
