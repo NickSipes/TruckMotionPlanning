@@ -8,3 +8,8 @@ nodeObject
 numpy
 operator
 scipy
+
+ROS/Gazebo:
+
+ros_control
+ros_controllers
