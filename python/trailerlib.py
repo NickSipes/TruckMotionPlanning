@@ -256,7 +256,7 @@ def main():
 
     show()
 
-    if length(PROGRAM_FILE) != 0 && occursin(PROGRAM_FILE, @ __FILE__):     # check syntax of this
+    if length(PROGRAM_FILE) != 0 and occursin(PROGRAM_FILE, @ __FILE__):     # check syntax of this
         @time main()
 
 
