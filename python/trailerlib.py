@@ -2,6 +2,7 @@
 # trailerlib module
 #
 
+import scipy
 import kdtree
 import numpy as np
 import matplotlib as plt
@@ -29,6 +30,8 @@ WBUBBLE_R = 10.0    # bubble radius
 B = 4.45            # distance between fifth wheel and back of truck
 C = 11.54           # distance between fifth wheel and front of truck
 I = 8.55            # system width
+VRX = [C, C, -B, -B, C]
+VRY = [(-I/2.0), (I/2.0), (I/2.0), (-I/2.0), (-I/2.0)]
 
 
 # uses circle or bubble to check for collision
@@ -124,7 +127,7 @@ def check_trailer_collision(ox, oy, x, y, yaw0, yaw1, kdtree):
 
     # these are bubble parameters
     DT = (LTF + LTB) / 2.0 - LTB    # need to review order of operations
-    DTR = (LRF + LTB) / 2.0 + 0.3   # need to review order of operations
+    DTR = (LTF + LTB) / 2.0 + 0.3   # need to review order of operations
 
 
     # check for trailer collision
@@ -256,7 +259,7 @@ def main():
 
     show()
 
-    if length(PROGRAM_FILE) != 0 and occursin(PROGRAM_FILE, @ __FILE__):     # check syntax of this
+    if length(PROGRAM_FILE) != 0 && occursin(PROGRAM_FILE, @ __FILE__):     # check syntax of this
         @time main()
 
 
