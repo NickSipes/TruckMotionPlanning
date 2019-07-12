@@ -3,11 +3,14 @@
 #
 # RBE 550: Motion Planning
 # 
-
-from matplotlib import pyplot
+import matplotlib
 import math
 from scipy import spatial
 from nodeObject import node
+matplotlib.use('GTK3Agg')
+from matplotlib import pyplot
+
+
 
 def calculate_dist_policy(goalX, goalY, obstacleX, obstacleY, gridResolution, vehicleRadius):
 
@@ -17,21 +20,21 @@ def calculate_dist_policy(goalX, goalY, obstacleX, obstacleY, gridResolution, ve
 	obstacleX = [x/gridResolution for x in obstacleX]
 	obstacleY = [y/gridResolution for y in obstacleY]
 
-	obstacleMap, minX, minY, maxX, maxY, xWidth, yWidth = calculate_obstacle_map(obstacleX, obstacleY, gridResolution, vr)
+	obstacleMap, minX, minY, maxX, maxY, xWidth, yWidth = calc_obstacle_map(obstacleX, obstacleY, gridResolution, vr)
 
 	# Create dictionaries of open and closed nodes
 	openList = dict()
 	closedList = dict()
 
 	# Put the goal node on the openList
-	openList.insert({calculate_node_index(goalNode, xWidth, minX, minY) : goalNode})
+	openList.insert({calc_index(goalNode, xWidth, minX, minY) : goalNode})
 
 	# Get the motion : cost association of our model
 	motion = get_motion_model()
-	numberOfMotions = length(motion)
+	numberOfMotions = len(motion)
 
 	# Prioirity Queue (Not Sure What it does)
-	pq = dict({calculate_node_index(goalNode, xWidth, minX, minY): goalNode.getCost()})
+	pq = dict({calc_index(goalNode, xWidth, minX, minY): goalNode.getCost()})
 
 	# Meat of the method
 	while True:
@@ -53,7 +56,7 @@ def calculate_dist_policy(goalX, goalY, obstacleX, obstacleY, gridResolution, ve
 			if not verify_node(searchNode, minX, minY, xWidth, yWidth, obstacleMap):
 				continue
 
-			currentNodeKey = calculate_node_index(searchNode, xWidth, yWidth, minX, minY)
+			currentNodeKey = calc_index(searchNode, xWidth, yWidth, minX, minY)
 
 			# If the node has already been explored, skip over it to the next motion
 			if currentNodeKey in closedList.keys():
@@ -74,7 +77,7 @@ def calculate_dist_policy(goalX, goalY, obstacleX, obstacleY, gridResolution, ve
 				openList[currentNodeKey] = node
 
 				# Add to queue with 
-				pq.update({calculate_node_index(searchNode, xWidth, minX, minY) : searchNode.getCost()})
+				pq.update({calc_index(searchNode, xWidth, minX, minY) : searchNode.getCost()})
 
 	# Calculate the policy map using the closed nodes
 	pmap = calc_policy_map(closedList, xWidth, yWidth, minX, minY)
