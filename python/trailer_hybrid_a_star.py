@@ -1,17 +1,15 @@
 """This file contains the majority of the functions for forming the path taken by the tractor trailer.  It is called
 by a script that defines the start and goal state and outputs the path (with time) taken."""
 
-import matplotlib as plt
+# import matplotlib as plt
 import math
 import numpy as np
 import operator
 from scipy import spatial
 
-# TODO resolve the following Julia packages: DataFrames (numpy?), NearestNeighbors (should be kdtree?)
-
-# TODO download each file from github to incorporate
-import rs_path
-import grid_a_star
+# TODO download rs_path from github to incorporate
+# import rs_path
+import Astar_Tractor_Trailer
 import trailerlib
 
 # Resolution and other variables
@@ -39,7 +37,7 @@ LT = trailerlib.LT                # meters, length of trailer
 MAX_STEER = trailerlib.MAX_STEER  # radians, maximum steering angle
 
 
-class Node: # TODO: implement which inputs can be left blank until needed
+class Node:  # TODO: implement which inputs can be left blank until needed
     def __init__(self, x_index, y_index, yaw_index, direction, x, y, yaw, yaw1, directions, steer, cost, parent_index):
         self.xind = x_index         # index of the x position (related to grid structure of Cspace)
         self.yind = y_index         # index of the y position (related to grid structure of Cspace)
@@ -49,7 +47,7 @@ class Node: # TODO: implement which inputs can be left blank until needed
         self.y = y                  # meters, y position
         self.yaw = yaw              # radians, yaw angle of tractor
         self.yaw1 = yaw1            # radians, yaw angle of trailer
-        self.directions = directions  # directions of positions and angles (TODO understand "directions")
+        self.directions = directions  # list, direction associated with each x and y position
         self.steer = steer          # steer input
         self.cost = cost            # cost TODO: which cost?
         self.pind = parent_index    # index of the parent node
@@ -60,7 +58,6 @@ class Config:
     Class representing the Cspace bounds and resolution
     """
     def __init__(self, minx, miny, minyaw, minyawt, maxx, maxy, maxyaw, maxyawt, xw, yw, yaww, yawtw, xyreso, yawreso):
-        # TODO understand each of these variables
         # TODO implement which inputs can be left blank until needed
         self.minx = minx
         self.miny = miny
@@ -76,6 +73,7 @@ class Config:
         self.yawtw = yawtw
         self.xyreso = xyreso
         self.yawreso = yawreso
+
 
 class Path:
     def __init__(self, x, y, yaw, yaw1, direction, cost):
@@ -126,13 +124,13 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
     # Determine holonomic costs of each xy coordinate on the grid (numpy dependent)
     h_dp = calc_holonomic_with_obstacle_heuristics(ngoal, ox, oy, xyreso)
 
-    open = {}    # Dictionary to hold open nodes
+    opened = {}    # Dictionary to hold open nodes
     closed = {}  # Dictionary to hold closed nodes
     pq = {}  # Dictionary to hold queue of indexes and costs, used to determine which node in open to expand next
     fnode = []   # TODO determine if list is correct structure and update comment with purpose, Julia code was "nothing"
 
     # Add the start node to the dictionary of open nodes
-    open[calc_index(nstart, c)] = nstart
+    opened[calc_index(nstart, c)] = nstart
 
     # Add the start node to the dictionary of indexes and costs
     pq[calc_index(nstart,c)] = calc_cost(nstart, h_dp, c)
@@ -143,7 +141,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
     while True:
 
         # Exit while loop and return nothing if open is expended and a solution is not found
-        if not open:
+        if not opened:
             print("Error: Cannot find path, No open nodes remaining.")
             return []
 
@@ -154,8 +152,8 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
         pq.pop(c_id)
 
         # Get the node with the obtained index and remove it from open
-        current = open.get(c_id)
-        open.pop(c_id)
+        current = opened.get(c_id)
+        opened.pop(c_id)
 
         # Add the current node to the closed list
         closed.update({c_id: current})
@@ -182,19 +180,19 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
                 continue  # continue with next node since this one is already closed
 
             # Check if node is already in the open dictionary
-            if node_ind not in open:
-                open.update({node_ind: node})  # add the node to open
-                pq.update({node_ind: calc_cost(node, h_dp, ngoal, c)})  # add the node cost information to pq
+            if node_ind not in opened:
+                opened.update({node_ind: node})  # add the node to open
+                pq.update({node_ind: calc_cost(node, h_dp, c)})  # add the node cost information to pq
             else:
-                if open[node_ind].cost > node.cost:  # if node is in the open dictionary, but the new node cost is
+                if opened[node_ind].cost > node.cost:  # if node is in the open dictionary, but the new node cost is
                                                      # lower, update the node in open
-                    open[node_ind] = node
+                    opened[node_ind] = node
 
-    print(f"number of nodes in open and closed = {len(open) + len(closed)}")
+    print(f"number of nodes in open and closed = {len(opened) + len(closed)}")
 
     path = get_final_path(closed, fnode, nstart, c)
 
-
+    return path
 
 def calc_config(ox, oy, xyreso, yawreso):
     """
@@ -254,7 +252,7 @@ def calc_holonomic_with_obstacle_heuristics(gnode, ox, oy, xyreso):
     :param xyreso: meters, xy grid resolution
     :return: 2D array with heuristic costs for each xy coordinate TODO ensure matches function output from grid_a_star
     """
-    h_dp = grid_a_star.calc_dist_policy(gnode.x[-1], gnode.y[-1], ox, oy, xyreso, 1)  # TODO ensure inputs are correct format
+    h_dp = Astar_Tractor_Trailer.calculate_dist_policy(gnode.x[-1], gnode.y[-1], ox, oy, xyreso, 1)
     return h_dp
 
 
@@ -362,20 +360,19 @@ def update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw
 
         fsteer = 0
 
-        fpath = Node(current.xind, current.yind, current.yawind, current.direction, fx, fy, fyaw, fyaw1, fsteer, fcost,
-                     fpind) #TODO fix error
+        fpath = Node(current.xind, current.yind, current.yawind, current.direction, fx, fy, fyaw, fyaw1, fd, fsteer,
+                     fcost, fpind)
 
         return True, fpath
 
     return False, []
 
 
-
 def analystic_expantion(n, ngoal, c, ox, oy, kdtree):
     """
     This function determines the least costly path to the next node that doesn't collide with an obstacle
     TODO verify function purpose
-    :param current: Node, current node
+    :param n: Node, current node
     :param ngoal: Node, goal node
     :param c: Config, Cspace
     :param ox: meters, list of x positions of obstacles
@@ -423,6 +420,7 @@ def analystic_expantion(n, ngoal, c, ox, oy, kdtree):
 
     return []
 
+
 def calc_rs_path_cost(rspath, yaw1):
     """
     This function calculates the total cost for a given RS path and yaw1
@@ -468,6 +466,7 @@ def calc_rs_path_cost(rspath, yaw1):
     cost += JACKKNIF_COST*sum(abs(rs_path.pi_2_pi(rspath.yaw-yaw1)))
 
     return cost
+
 
 def calc_next_node(current, c_id, u, d, c):
     """
@@ -567,7 +566,6 @@ def verify_index(node, c, ox, oy, inityaw1, kdtree):
     if not trailerlib.check_trailer_collision(ox, oy, node.x[ind], node.y[ind], node.yaw[ind], yaw1[ind], kdtree=kdtree):
         return False
 
-
     # If none of the above returned false, return true
     return True
 
@@ -625,10 +623,10 @@ def is_same_grid(node1, node2):
     :return: boolean, status of being in the same grid
     """
 
-    if node.xind != node2.xind:
+    if node1.xind != node2.xind:
         return False
 
-    if node.yind != node2.yind:
+    if node1.yind != node2.yind:
         return False
 
     if node1.yawind != node2.yawind:

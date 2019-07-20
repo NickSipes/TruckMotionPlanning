@@ -2,12 +2,13 @@
 # trailerlib module
 #
 
-import scipy
-import kdtree
+from scipy import spatial
 import numpy as np
-import matplotlib as plt
-import NearestNeighbors
+import matplotlib
 import math
+matplotlib.use('GTK3Agg')
+from matplotlib import pyplot as plt
+
 
 # Parameters for the truck and trailer
 # Units in radians and meters
@@ -43,7 +44,7 @@ def check_collision(x, y, yaw, kdtree, ox, oy, wbd, wbr, vrx, vry):
         # collision check for whole bubble
         # this is dependent on some function called inrange.jl which is one of the source files
         # in NearestNeighbors.jl
-        ids = inrange(kdtree, [cx, cy], wbr, True)
+        ids = kdtree.query_ball_point((cx, cy), wbr)
         if len(ids) == 0:
             continue
 
@@ -89,7 +90,6 @@ def rect_check(ix, iy, iyaw, ox, oy, vrx, vry):
         if sumangle >= math.pi:
             return False    # this means there is a collision
 
-
     return True     # this means no collision
 
 
@@ -118,31 +118,26 @@ def trailer_motion_model(x, y, yaw0, yaw1, D, d, L, delta):
 # this checks for trailer collision using KDTree.jl function which is one of the source files
 # in NearestNeighbors.jl
 def check_trailer_collision(ox, oy, x, y, yaw0, yaw1, kdtree):
-    if kdtree == None:
-        kdtree = KDTree([np.conj(ox), np.conj(oy)])     #not sure if this is set up properly for kdtree, also see julia code for transpose syntax '
+    if kdtree is None:
+        kdtree = spatial.KDTree([np.conj(ox), np.conj(oy)])     #not sure if this is set up properly for kdtree, also see julia code for transpose syntax '
 
     vrxt = np.array([LTF, LTF, -LTB, -LTB, LTF])
     vryt = np.array([(-W/2.0), (W/2.0), (W/2.0), (-W/2.0), (-W/2.0)])
-
 
     # these are bubble parameters
     DT = (LTF + LTB) / 2.0 - LTB    # need to review order of operations
     DTR = (LTF + LTB) / 2.0 + 0.3   # need to review order of operations
 
-
     # check for trailer collision
     if not check_collision(x, y, yaw1, kdtree, ox, oy, DT, DTR, vrxt, vryt):    # need to verify if syntax is correct
         return False    # there is collision
 
-
     vrxf = np.array([LF, LF, -LB, LF])
     vryf = np.array([(-W/2.0), (W/2.0), (W/2.0), (-W/2.0), (-W/2.0)])
-
 
     # these are bubble parameters
     DF = (LF + LB) / 2.0 - LB       # need to review order of operations
     DFR = (LF + LB) / 2.0 + 0.3     # need to review order of operations
-
 
     # check for front trailer collision
     # but i think this is checking for truck collision
@@ -158,87 +153,92 @@ def check_trailer_collision(ox, oy, x, y, yaw0, yaw1, kdtree):
 # also, julia uses .+= for element-wise additions, but python does not
 # need the . right?
 def plot_trailer(x, y, yaw, yaw1, steer):
-    truckcolor = "-k"   # need to verify if syntax is correct
+    truckcolor = '-k'   # need to verify if syntax is correct
 
     LENGTH = LB + LF        # this is full length of truck
     LENGTHt = LTB + LTF     # this is full length of trailer
 
-    truckOutLine = np.array([-LB, (LENGTH-LB), (LENGTH-LB), -LB, -LB], [(W/2), (W/2), (-W/2), (-W/2), (W/2)])   # syntax correct for 2x5?
-    trailerOutLine = np.array([-LTB, (LENGTHt-LTB), (LENGTHt-LTB), -LTB, -LTB], [(W/2), (W/2), (-W/2), (W/2)])  # syntax correct for 2x5?
+    truckOutLine = np.array([[-LB, (LENGTH-LB), (LENGTH-LB), -LB, -LB], [(W/2), (W/2), (-W/2), (-W/2), (W/2)]])
+    trailerOutLine = np.array([[-LTB, (LENGTHt-LTB), (LENGTHt-LTB), -LTB, -LTB], [(W/2), (W/2), (-W/2), (-W/2), (W/2)]])
 
-    rr_wheel = np.array([TR, -TR, -TR, TR, TR], [((-W/12.0)+TW), ((-W/12.0)+TW), ((W/12.0)+TW), ((W/12.0)+TW), ((-W/12.0)+TW)])     # check order of operations
-    rl_wheel = np.array([TR, -TR, -TR, TR, TR], [((-W/12.0)-TW), ((-W/12.0)-TW), ((W/12.0)-TW), ((W/12.0)-TW), ((-W/12.0)-TW)])     # check order of operations
+    rr_wheel = np.array([[TR, -TR, -TR, TR, TR], [((-W/12.0)+TW), ((-W/12.0)+TW), ((W/12.0)+TW), ((W/12.0)+TW),
+                                                  ((-W/12.0)+TW)]])
+    rl_wheel = np.array([[TR, -TR, -TR, TR, TR], [((-W/12.0)-TW), ((-W/12.0)-TW), ((W/12.0)-TW), ((W/12.0)-TW),
+                                                  ((-W/12.0)-TW)]])
 
-    fr_wheel = np.array([TR, -TR, -TR, TR, TR], [((-W/12.0)+TW), ((-W/12.0)+TW), ((W/12.0)+TW), ((W/12.0)+TW), ((-W/12.0)+TW)])     # check order of operations
-    fl_wheel = np.array([TR, -TR, -TR, TR, TR], [((-W/12.0)-TW), ((-W/12.0)-TW), ((W/12.0)-TW), ((W/12.0)-TW), ((-W/12.0)-TW)])     # check order of operations
+    fr_wheel = np.array([[TR, -TR, -TR, TR, TR], [((-W/12.0)+TW), ((-W/12.0)+TW), ((W/12.0)+TW), ((W/12.0)+TW),
+                                                  ((-W/12.0)+TW)]])
+    fl_wheel = np.array([[TR, -TR, -TR, TR, TR], [((-W/12.0)-TW), ((-W/12.0)-TW), ((W/12.0)-TW), ((W/12.0)-TW),
+                                                  ((-W/12.0)-TW)]])
 
-    tr_wheel = np.array([TR, -TR, -TR, TR, TR], [((-W/12.0)+TW), ((-W/12.0)+TW), ((W/12.0)+TW), ((W/12.0)+TW), ((-W/12.0)+TW)])     # check order of operations
-    tl_wheel = np.array([TR, -TR, -TR, TR, TR], [((-W/12.0)-TW), ((-W/12.0)-TW), ((W/12.0)-TW), ((W/12.0)-TW), ((-W/12.0)-TW)])     # check order of operations
+    tr_wheel = np.array([[TR, -TR, -TR, TR, TR], [((-W/12.0)+TW), ((-W/12.0)+TW), ((W/12.0)+TW), ((W/12.0)+TW),
+                                                  ((-W/12.0)+TW)]])
+    tl_wheel = np.array([[TR, -TR, -TR, TR, TR], [((-W/12.0)-TW), ((-W/12.0)-TW), ((W/12.0)-TW), ((W/12.0)-TW),
+                                                  ((-W/12.0)-TW)]])
 
-    Rot1 = np.array([math.cos(yaw), math.sin(yaw)], [-math.sin(yaw), math.cos(yaw)])            # syntax correct for 2x2?
-    Rot2 = np.array([math.cos(steer), math.sin(steer)], [-math.sin(steer), math.cos(steer)])    # syntax correct for 2x2?
-    Rot3 = np.array([math.cos(yaw1), math.sin(yaw1)], [-math.sin(yaw1), math.cos(yaw1)])        # syntax correct for 2x2?
+    Rot1 = np.array([[math.cos(yaw), math.sin(yaw)], [-math.sin(yaw), math.cos(yaw)]])
+    Rot2 = np.array([[math.cos(steer), math.sin(steer)], [-math.sin(steer), math.cos(steer)]])
+    Rot3 = np.array([[math.cos(yaw1), math.sin(yaw1)], [-math.sin(yaw1), math.cos(yaw1)]])
 
-    fr_wheel = np.conj(np.conj(fr_wheel)*Rot2)      # check syntax of this
-    fl_wheel = np.conj(np.conj(fl_wheel)*Rot2)      # check syntax of this
+    fr_wheel = np.transpose(np.matmul(np.transpose(fr_wheel), Rot2))
+    fl_wheel = np.transpose(np.matmul(np.transpose(fl_wheel), Rot2))
 
-    fr_wheel[1, :] += WB                            # check syntax of this
-    fl_wheel[1, :] += WB                            # check syntax of this
+    fr_wheel[0, :] += WB                            # check syntax of this
+    fl_wheel[0, :] += WB                            # check syntax of this
 
-    fr_wheel = np.conj(np.conj(fr_wheel)*Rot1)      # check syntax of this
-    fl_wheel = np.conj(np.conj(fl_wheel)*Rot1)      # check syntax of this
+    fr_wheel = np.transpose(np.matmul(np.transpose(fr_wheel), Rot1))
+    fl_wheel = np.transpose(np.matmul(np.transpose(fl_wheel), Rot1))
 
-    tr_wheel[1, :] -= LT                            # check syntax of this
-    tl_wheel[1, :] -= LT                            # check syntax of this
+    tr_wheel[0, :] -= LT                            # check syntax of this
+    tl_wheel[0, :] -= LT                            # check syntax of this
 
-    tr_wheel = np.conj(np.conj(tr_wheel)*Rot3)      # check syntax of this
-    tl_wheel = np.conj(np.conj(tl_wheel)*Rot3)      # check syntax of this
+    tr_wheel = np.transpose(np.matmul(np.transpose(tr_wheel), Rot3))
+    tl_wheel = np.transpose(np.matmul(np.transpose(tl_wheel), Rot3))
 
-    truckOutLine = np.conj(np.conj(truckOutLine)*Rot1)          # check syntax of this
-    trailerOutLine = np.conj(np.conj(trailerOutLine)*Rot1)      # check syntax of this
+    truckOutLine = np.transpose(np.matmul(np.transpose(truckOutLine), Rot1))
+    trailerOutLine = np.transpose(np.matmul(np.transpose(trailerOutLine), Rot3))
 
-    rr_wheel = np.conj(np.conj(rr_wheel)*Rot1)      # check syntax of this
-    rl_wheel = np.conj(np.conj(rl_wheel)*Rot1)      # check syntax of this
+    rr_wheel = np.transpose(np.matmul(np.transpose(rr_wheel), Rot1))
+    rl_wheel = np.transpose(np.matmul(np.transpose(rl_wheel), Rot1))
 
-    truckOutLine[1, :] += x
-    truckOutLine[2, :] += y
+    truckOutLine[0, :] += x
+    truckOutLine[1, :] += y
 
-    trailerOutLine[1, :] += x
-    trailerOutLine[2, :] += y
+    trailerOutLine[0, :] += x
+    trailerOutLine[1, :] += y
 
-    fr_wheel[1, :] += x
-    fr_wheel[2, :] += y
+    fr_wheel[0, :] += x
+    fr_wheel[1, :] += y
 
-    rr_wheel[1, :] += x
-    rr_wheel[2, :] += y
+    rr_wheel[0, :] += x
+    rr_wheel[1, :] += y
 
-    fl_wheel[1, :] += x
-    fl_wheel[2, :] += y
+    fl_wheel[0, :] += x
+    fl_wheel[1, :] += y
 
-    rl_wheel[1, :] += x
-    rl_wheel[2, :] += y
+    rl_wheel[0, :] += x
+    rl_wheel[1, :] += y
 
-    tr_wheel[1, :] += x
-    tr_wheel[2, :] += y
+    tr_wheel[0, :] += x
+    tr_wheel[1, :] += y
 
-    tl_wheel[1, :] += x
-    tl_wheel[2, :] += y
+    tl_wheel[0, :] += x
+    tl_wheel[1, :] += y
 
+    plt.plot(truckOutLine[0, :], truckOutLine[1, :], truckcolor)
+    plt.plot(trailerOutLine[0, :], trailerOutLine[1, :], truckcolor)
 
-    # not sure why python complaining about plot not being in __init__.py
-    plt.plot([truckOutLine[1, :], truckOutLine[2, :], truckcolor])
-    plt.plot([trailerOutLine[1, :], trailerOutLine[2, :], truckcolor])
+    plt.plot(fr_wheel[0, :], fr_wheel[1, :], truckcolor)
+    plt.plot(rr_wheel[0, :], rr_wheel[1, :], truckcolor)
 
-    plt.plot([fr_wheel[1, :], fr_wheel[2, :], truckcolor])
-    plt.plot([rr_wheel[1, :], rr_wheel[2, :], truckcolor])
+    plt.plot(fl_wheel[0, :], fl_wheel[1, :], truckcolor)
+    plt.plot(rl_wheel[0, :], rl_wheel[1, :], truckcolor)
 
-    plt.plot([fl_wheel[1, :], fl_wheel[2, :], truckcolor])
-    plt.plot([rl_wheel[1, :], rl_wheel[2, :], truckcolor])
-
-    plt.plot([tr_wheel[1, :], tr_wheel[2, :], truckcolor])
-    plt.plot([tl_wheel[1, :], tl_wheel[2, :], truckcolor])
+    plt.plot(tr_wheel[0, :], tr_wheel[1, :], truckcolor)
+    plt.plot(tl_wheel[0, :], tl_wheel[1, :], truckcolor)
 
     plt.plot([x, y, "*"])
+    plt.axis('equal')
 
 
 def main():
@@ -255,13 +255,13 @@ def main():
     DT = (LTF + LTB) / 2.0 - LTB    # check operation of order
     DTR = (LTF + LTB) / 2.0 + 0.3   # check operation of order
 
-    axis("equal")
+    plt.show()
 
-    show()
+    #if length(PROGRAM_FILE) != 0 && occursin(PROGRAM_FILE, @ __FILE__):     # check syntax of this
+    #    @time main()
 
-    if length(PROGRAM_FILE) != 0 && occursin(PROGRAM_FILE, @ __FILE__):     # check syntax of this
-        @time main()
 
+main()
 
 
 
