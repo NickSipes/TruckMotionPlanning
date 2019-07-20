@@ -113,5 +113,5 @@ def main():
     # Animate Path
     show_animation(path, ox, oy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1)
 
-    # Executed code
-    main()
+# Executed code
+main()
