@@ -7,7 +7,7 @@ import numpy as np
 import operator
 from scipy import spatial
 
-# TODO download rs_path from github to incorporate
+
 import rs_path
 import Astar_Tractor_Trailer
 import trailerlib
@@ -19,7 +19,7 @@ GOAL_TYAW_TH = math.radians(5)          # radians
 MOTION_RESOLUTION = 0.1                 # meters (path interpolation resolution)
 N_STEER = 20                            # number of steer commands
 EXTEND_AREA = 5                         # meters, used in calc_config to extend the configurations space beyond the
-                                        # outermost obstacles
+# outermost obstacles
 SKIP_COLLISION_CHECK = 4                # skip number for collision checks
 
 # Cost variables
@@ -28,7 +28,7 @@ BACK_COST = 5           # backwards penalty cost (makes the algorithm favor goin
 STEER_CHANGE_COST = 5   # cost to change steering angle
 STEER_COST = 1          # cost to be turning
 JACKKNIF_COST = 200     # cost used to discourage jackknifes by making paths with hidh difference between yaw and yaw1
-                        # undesireable
+# undesirable
 H_COST = 5              # heuristic cost weighting
 
 # Trailer specific parameters from trailerlib
@@ -37,7 +37,7 @@ LT = trailerlib.LT                # meters, length of trailer
 MAX_STEER = trailerlib.MAX_STEER  # radians, maximum steering angle
 
 
-class Node:  # TODO: implement which inputs can be left blank until needed
+class Node:
     def __init__(self, x_index, y_index, yaw_index, direction, x, y, yaw, yaw1, directions, steer, cost, parent_index):
         self.xind = x_index         # index of the x position (related to grid structure of Cspace)
         self.yind = y_index         # index of the y position (related to grid structure of Cspace)
@@ -49,7 +49,7 @@ class Node:  # TODO: implement which inputs can be left blank until needed
         self.yaw1 = yaw1            # radians, yaw angle of trailer
         self.directions = directions  # list, direction associated with each x and y position
         self.steer = steer          # steer input
-        self.cost = cost            # cost TODO: which cost?
+        self.cost = cost            # cost
         self.pind = parent_index    # index of the parent node
 
 
@@ -58,7 +58,6 @@ class Config:
     Class representing the Cspace bounds and resolution
     """
     def __init__(self, minx, miny, minyaw, minyawt, maxx, maxy, maxyaw, maxyawt, xw, yw, yaww, yawtw, xyreso, yawreso):
-        # TODO implement which inputs can be left blank until needed
         self.minx = minx
         self.miny = miny
         self.minyaw = minyaw
@@ -82,12 +81,12 @@ class Path:
         self.yaw = yaw              # radians, tractor angle
         self.yaw1 = yaw1            # radians, trailer angle
         self.direction = direction  # direction of motion (true = forward, false = backward)
-        self.cost = cost            # cost TODO which cost?
+        self.cost = cost            # cost
 
 
 def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyreso, yawreso):
     """
-    TODO describe what the calc_hybrid_astar_path function does
+
     :param sx:      meters, start x position
     :param sy:      meters, start y position
     :param syaw:    radians, start tractor angle
@@ -105,7 +104,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
 
     syaw, gyaw = rs_path.pi_2_pi(syaw), rs_path.pi_2_pi(gyaw) # function used to ensure yaw is between -pi and pi
     oxy = [(ox[i], oy[i]) for i in range(0, len(ox))]   # forms a list of tuples from the two lists ox and oy for
-                                                        # input to kd.create
+    # input to kd.create
 
     # forms a kd tree from the xy points of the obstacles
     kdtree = spatial.KDTree(oxy)
@@ -127,7 +126,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
     opened = {}    # Dictionary to hold open nodes
     closed = {}  # Dictionary to hold closed nodes
     pq = {}  # Dictionary to hold queue of indexes and costs, used to determine which node in open to expand next
-    fnode = []   # TODO determine if list is correct structure and update comment with purpose, Julia code was "nothing"
+    fnode = []
 
     # Add the start node to the dictionary of open nodes
     opened[calc_index(nstart, c)] = nstart
@@ -146,7 +145,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
             return []
 
         # Obtain the index of the next node
-        c_id = min(pq.iteritems(), key=operator.itemgetter(1))[0]
+        c_id = min(pq.keys())  # TODO fixed syntax
 
         # Removed the obtained index from the queue
         pq.pop(c_id)
@@ -185,7 +184,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
                 pq.update({node_ind: calc_cost(node, h_dp, c)})  # add the node cost information to pq
             else:
                 if opened[node_ind].cost > node.cost:  # if node is in the open dictionary, but the new node cost is
-                                                     # lower, update the node in open
+                    # lower, update the node in open
                     opened[node_ind] = node
 
     print(f"number of nodes in open and closed = {len(opened) + len(closed)}")
@@ -193,6 +192,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
     path = get_final_path(closed, fnode, nstart, c)
 
     return path
+
 
 def calc_config(ox, oy, xyreso, yawreso):
     """
@@ -210,7 +210,6 @@ def calc_config(ox, oy, xyreso, yawreso):
     max_x_m = max(ox) + EXTEND_AREA
     max_y_m = max(oy) + EXTEND_AREA
 
-    # TODO determine if ox and oy need to be updated globally
     # adds the two min and max xy points to the list of obstacles
     ox.append(min_x_m)
     oy.append(min_y_m)
@@ -232,7 +231,6 @@ def calc_config(ox, oy, xyreso, yawreso):
     maxyaw = round(math.pi/yawreso)
     yaww = round(maxyaw - minyaw)
 
-    # TODO determine what these t variants of yaw do
     minyawt = minyaw
     maxyawt = maxyaw
     yawtw = yaww
@@ -250,7 +248,7 @@ def calc_holonomic_with_obstacle_heuristics(gnode, ox, oy, xyreso):
     :param ox: meters, list of x coordinates of each obstacle
     :param oy: meters, list of y coordinates of each obstacle
     :param xyreso: meters, xy grid resolution
-    :return: 2D array with heuristic costs for each xy coordinate TODO ensure matches function output from grid_a_star
+    :return: 2D array with heuristic costs for each xy coordinate
     """
     h_dp = Astar_Tractor_Trailer.calculate_dist_policy(gnode.x[-1], gnode.y[-1], ox, oy, xyreso, 1)
     return h_dp
@@ -284,7 +282,7 @@ def calc_cost(n, h_dp, c):
     :param c: Config, Cspace
     :return: total cost of the current node
     """
-    return n.cost + H_COST*h_dp[n.xind - c.minx, n.yind - c.miny]
+    return n.cost + H_COST*h_dp[n.xind - c.minx][n.yind - c.miny]  # TODO fixed indexing syntax
 
 
 def calc_motion_inputs():
@@ -315,15 +313,14 @@ def calc_motion_inputs():
         d.append(-1)
 
     # append u to u so when indexed, each steering input pairs with both a forward and back driving input
-    for i in u:
-        u.append(i)
+    u.extend(u)  # TODO fixed (old syntax was an infinite loop)
 
     return u, d
 
 
 def update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw1):
     """
-    This function updates the current node with "analystic" data TODO don't understand
+    This function updates the current node with "analystic" data
     :param current: Node, current node
     :param ngoal: Node, goal node
     :param c: Config, configuration space
@@ -336,7 +333,7 @@ def update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw
 
     apath = analystic_expantion(current, ngoal, c, ox, oy, kdtree)
 
-    # Formulate data for the "f" node TODO does this mean next node?
+    # Formulate data for the "f" node
     if apath:  # if apath = [], skip the if statement since there is no path (ignore the unresolved attribute reference
         # errors as they won't happen since apath is only a list if it is empty and then the if statement is false and
         # the block doesn't execute)
@@ -371,7 +368,6 @@ def update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw
 def analystic_expantion(n, ngoal, c, ox, oy, kdtree):
     """
     This function determines the least costly path to the next node that doesn't collide with an obstacle
-    TODO verify function purpose
     :param n: Node, current node
     :param ngoal: Node, goal node
     :param c: Config, Cspace
@@ -389,8 +385,7 @@ def analystic_expantion(n, ngoal, c, ox, oy, kdtree):
     # Calculate the sharpest turn possible
     max_curvature = math.tan(MAX_STEER)/WB
 
-    # Call rs_path to determine the paths available based on current and goal node TODO verify integration with rs_path
-    # TODO determine structure of paths from rs_path.calc_paths
+    # Call rs_path to determine the paths available based on current and goal node
     paths = rs_path.calc_paths(sx, sy, syaw, ngoal.x[-1], ngoal.y[-1], ngoal.yaw[-1], max_curvature,
                                step_size=MOTION_RESOLUTION)
 
@@ -408,10 +403,9 @@ def analystic_expantion(n, ngoal, c, ox, oy, kdtree):
 
     # Go through each path, starting with the lowest cost, and check for collisions, return the first viable path
     for i in range(len(pathqueue)):
-        path = min(pathqueue.iteritems(), key=operator.itemgetter(1))[0]  # extract path with lowest cost # TODO see error
+        path = min(pathqueue.iteritems(), key=operator.itemgetter(1))[0]  # extract path with lowest cost
         pathqueue.pop(path)  # remove the lowest cost path from the queue
 
-        # TODO description insert here
         steps = MOTION_RESOLUTION*path.directions
         yaw1 = trailerlib.calc_trailer_yaw_from_xyyaw(path.x, path.y, path.yaw, n.yaw1[-1], steps)
         ind = [i for i in np.arange(1, len(path.x), SKIP_COLLISION_CHECK)]
@@ -476,10 +470,9 @@ def calc_next_node(current, c_id, u, d, c):
     :param u: input, steering input
     :param d: input, driving input
     :param c: Config, Cspace
-    :return: TODO return of this function
+    :return:
     """
 
-    # TODO what is arc_l?
     arc_l = XY_GRID_RESOLUTION*1.5
 
     nlist = math.floor(arc_l/MOTION_RESOLUTION) + 1

@@ -104,11 +104,11 @@ def main():
         ox.append(i)
         oy.append(15)
 
-    oox = ox[:]  # TODO are these lines necessary, they seem to just copy the ox and oy lists
+    oox = ox[:]
     ooy = oy[:]
 
     # Generate Path
-    # TODO @time is a timing function.  That can be added later with the time module.
+
     path = trailer_hybrid_a_star.calc_hybrid_astar_path(sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1, ox, oy, trailer_hybrid_a_star.XY_GRID_RESOLUTION, trailer_hybrid_a_star.YAW_GRID_RESOLUTION)
 
     # Animate Path

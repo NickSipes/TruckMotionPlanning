@@ -52,16 +52,17 @@ def main():
         ox.append(-10.0)
         oy.append(i)
 
-
     oox = ox[:]
     ooy = oy[:]
-    # plot(oox, ooy, ".k")
-    # axis("equal")
-    # show()
+    # plt.plot(oox, ooy, ".k")  # TODO fixed syntax plot commands (useful for verifying points)
+    # plt.axis("equal")
+    # plt.show()
 
     # path generation
     # nor sure what to do with @time, so took it out from path below
-    path = trailer_hybrid_a_star.calc_hybrid_astar_path(sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1, ox, oy, trailer_hybrid_a_star.XY_GRID_RESOLUTION, trailer_hybrid_a_star.YAW_GRID_RESOLUTION)
+    path = trailer_hybrid_a_star.calc_hybrid_astar_path(sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1, ox, oy,
+                                                        trailer_hybrid_a_star.XY_GRID_RESOLUTION,
+                                                        trailer_hybrid_a_star.YAW_GRID_RESOLUTION)
 
     # ====Animation=====
     show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1)

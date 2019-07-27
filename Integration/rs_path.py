@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 STEP_SIZE = 0.1
 MAX_PATH_LENGTH = 1000
 
-class Path:  # TODO define each input to the class
+class Path:
     def __init__(self, lengths, ctypes, L, x, y, yaw, directions):
         self.lengths = lengths
         self.ctypes = ctypes
@@ -70,7 +70,7 @@ def cart2pol(x, y):
 
 def calc_tau_omega(u, v, xi, eta, phi):
     """
-    TODO fill in data
+
     :param u:
     :param v:
     :param xi:
@@ -95,24 +95,35 @@ def calc_tau_omega(u, v, xi, eta, phi):
     return tau, omega
 
 
-def pi_2_pi(iangle):
+#  TODO changed entire pi_2_pi function to handle lists
+def pi_2_pi(angles):
     """
-    TODO fill in data
-    :param iangle:
+
+    :param angles: float or list of floats
     :return:
     """
-    while iangle > math.pi:
-        iangle -= 2*math.pi
+    if isinstance(angles, float):
+        while angles > math.pi:
+            angles -= 2*math.pi
 
-    while iangle < -math.pi:
-        iangle += 2*math.pi
+        while angles < -math.pi:
+            angles += 2*math.pi
+        return angles
+    else:  # input was a list
+        angle_out = []
+        for iangle in angles:
+            while iangle > math.pi:
+                iangle -= 2*math.pi
 
-    return iangle
+            while iangle < -math.pi:
+                iangle += 2*math.pi
+            angle_out.append(iangle)
+        return angle_out
 
 
 def get_label(path):
     """
-    TODO fill in data
+
     :param path:
     :return:
     """
@@ -131,7 +142,7 @@ def get_label(path):
 # Path Shape Functions
 def SLS(x, y, phi):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -155,7 +166,7 @@ def SLS(x, y, phi):
 
 def LSL(x, y, phi):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -172,7 +183,7 @@ def LSL(x, y, phi):
 
 def LRL(x, y, phi):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -193,7 +204,7 @@ def LRL(x, y, phi):
 
 def LRLRn(x, y, phi):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -214,7 +225,7 @@ def LRLRn(x, y, phi):
 
 def LRLRp(x, y, phi):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -236,7 +247,7 @@ def LRLRp(x, y, phi):
 
 def LRSL(x, y, phi):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -259,7 +270,7 @@ def LRSL(x, y, phi):
 
 def LRSR(x, y, phi):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -281,7 +292,7 @@ def LRSR(x, y, phi):
 
 def LRSLR(x, y, phi):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -304,7 +315,7 @@ def LRSLR(x, y, phi):
 
 def interpolate(ind, l, m, maxc, ox, oy, oyaw, px, py, pyaw, directions):
     """
-    TODO fill in data
+
     :param ind:
     :param l:
     :param m:
@@ -346,7 +357,7 @@ def interpolate(ind, l, m, maxc, ox, oy, oyaw, px, py, pyaw, directions):
 # Path Functions
 def SCS(x, y, phi, paths):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -356,7 +367,7 @@ def SCS(x, y, phi, paths):
     flag, t, u, v = SLS(x, y, phi)
 
     if flag:
-        paths = set_path(paths, [t, u, v], ["s", "L", "S"])
+        paths = set_path(paths, [t, u, v], ["S", "L", "S"])  # TODO fixed lower case s
 
     flag, t, u, v = SLS(x, -y, -phi)
 
@@ -368,7 +379,7 @@ def SCS(x, y, phi, paths):
 
 def CSC(x, y, phi, paths):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -412,7 +423,7 @@ def CSC(x, y, phi, paths):
 
 def CCC(x, y, phi, paths):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -460,7 +471,7 @@ def CCC(x, y, phi, paths):
 
 def CCCC(x, y, phi, paths):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -504,7 +515,7 @@ def CCCC(x, y, phi, paths):
 
 def CCSC(x, y, phi, paths):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -583,7 +594,7 @@ def CCSC(x, y, phi, paths):
 
 def CCSCC(x, y, phi, paths):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param phi:
@@ -612,7 +623,7 @@ def CCSCC(x, y, phi, paths):
 # High Level Path Functions
 def generate_path(q0, q1, maxc):
     """
-    TODO fill in data
+
     :param q0:
     :param q1:
     :param maxc:
@@ -642,7 +653,7 @@ def generate_path(q0, q1, maxc):
 
 def generate_local_course(L, lengths, mode, maxc, step_size):
     """
-    TODO fill in data
+
     :param L:
     :param lengths:
     :param mode:
@@ -675,7 +686,7 @@ def generate_local_course(L, lengths, mode, maxc, step_size):
             d = -step_size
 
         # Set origin state
-        ox, oy, oyaw = px[ind], py[ind], pyaw[ind]  # TODO determine if ind should be 0
+        ox, oy, oyaw = px[ind], py[ind], pyaw[ind]
 
         ind -= 1
         if i >= 2 and (lengths[i-1]*lengths[i]) > 0:
@@ -684,7 +695,7 @@ def generate_local_course(L, lengths, mode, maxc, step_size):
             pd = d - ll
 
         while abs(pd) <= abs(l):
-            ind += 1  # TODO if origin based on ind, first iteration of the loop compares same point
+            ind += 1
             px, py, pyaw, directions = interpolate(ind, pd, m, maxc, ox, oy, oyaw, px, py, pyaw, directions)
             pd += d
 
@@ -705,7 +716,7 @@ def generate_local_course(L, lengths, mode, maxc, step_size):
 
 def calc_paths(sx, sy, syaw, gx, gy, gyaw, maxc, step_size=STEP_SIZE):
     """
-    TODO fill in data
+
     :param sx:
     :param sy:
     :param syaw:
@@ -734,7 +745,7 @@ def calc_paths(sx, sy, syaw, gx, gy, gyaw, maxc, step_size=STEP_SIZE):
 
 def calc_shortest_path(sx, sy,syaw, gx, gy, gyaw, maxc, step_size=STEP_SIZE):
     """
-    TODO Fill in data
+
     :param sx:
     :param sy:
     :param syaw:
@@ -759,7 +770,7 @@ def calc_shortest_path(sx, sy,syaw, gx, gy, gyaw, maxc, step_size=STEP_SIZE):
 
 def calc_curvature(x, y, yaw, directions):
     """
-    TODO fill in data
+
     :param x:
     :param y:
     :param yaw:
