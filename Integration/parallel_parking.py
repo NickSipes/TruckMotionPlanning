@@ -15,8 +15,8 @@ def main():
     # initial state
     sx = -15.0  # [m]
     sy = 8.0  # [m]
-    syaw0 = math.radians(180.0)
-    syaw1 = math.radians(180.0)
+    syaw0 = math.radians(0)  # TODO changed to a normal parallel parking example (if 180, truck has to perform turn)
+    syaw1 = math.radians(0)
 
     # goal state
     gx = 1.0  # [m]
@@ -70,8 +70,6 @@ def main():
     print("Done!!")
     # print("Done!!", PROGRAM_FILE)
 
-main()
-
 
 def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
     plt.plot(oox, ooy, ".k")
@@ -84,7 +82,9 @@ def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
     direction = path.direction
 
     steer = 0.0
-    for ii in range(1, len(x)):
+    plt.ion()  # TODO updated/added several lines to get the image to show and update
+    plt.show()
+    for ii in range(1, len(yaw1)-1):  # TODO yaw1 is shorter than rest... therefore something is wrong
         plt.cla()
         plt.plot(oox, ooy, ".k")
         plt.plot(x, y, "-r", label="Hybrid A* path")
@@ -97,9 +97,11 @@ def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
         else:
             steer = 0.0
 
-
         trailer_hybrid_a_star.trailerlib.plot_trailer(x[ii], y[ii], yaw[ii], yaw1[ii], steer)
         plt.grid(True)
         plt.axis("equal")
-        time.sleep(0.0001)
+        plt.draw()
+        plt.pause(.001)
 
+
+main()  # TODO moved show_animation above main, else it wasn't defined.

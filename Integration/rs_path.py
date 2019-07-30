@@ -304,7 +304,7 @@ def LRSLR(x, y, phi):
     if rho >= 2:
         u = 4 - math.sqrt(rho**2 - 4)
         if u <= 0:
-            t = mod2pi(math.atan2((4-u)*xi) - 2*eta, -2*xi + (u - 4)*eta)
+            t = mod2pi(math.atan2((4-u)*xi - 2*eta, -2*xi + (u - 4)*eta))  # TODO fixed parenthesis error
             v = mod2pi(t - phi)
 
             if t >= 0 and v >= 0:

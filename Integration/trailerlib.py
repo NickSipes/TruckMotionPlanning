@@ -47,8 +47,9 @@ def check_collision(x, y, yaw, kdtree, ox, oy, wbd, wbr, vrx, vry):
         ids = kdtree.query_ball_point((cx, cy), wbr)
         if len(ids) == 0:
             continue
-
-        if not rect_check(ix, iy, iyaw, ox[ids], oy[ids], vrx, vry):    # need to check if syntax is correct
+        ox_check = [ox[i] for i in ids]  # TODO fix index error (was using a list as an index, cahnged this line + 2)
+        oy_check = [oy[i] for i in ids]
+        if not rect_check(ix, iy, iyaw, ox_check, oy_check, vrx, vry):    # need to check if syntax is correct
             return False    # this means there is a collision
 
     return True     # this means no collision
@@ -96,10 +97,10 @@ def rect_check(ix, iy, iyaw, ox, oy, vrx, vry):
 # this calculates the trailer yaw from the x, y, yaw lists
 def calc_trailer_yaw_from_xyyaw(x, y, yaw, init_tyaw, steps):
     tyaw = np.zeros(len(x))
-    tyaw[1] = init_tyaw
+    tyaw[0] = init_tyaw  # TODO fixed index error (start at 0 vs 1)
 
     for i in range(2, len(x)):
-        tyaw[i] += (tyaw[i - 1] + steps[i - 1]) / (LT * math.sin(yaw[i - 1] - tyaw[i - 1]))
+        tyaw[i] += (tyaw[i - 1] + steps[i - 1]) / LT * math.sin(yaw[i - 1] - tyaw[i - 1])  # TODO fixed parenthesis error
 
     return tyaw
 
