@@ -9,55 +9,6 @@ matplotlib.use('GTK3Agg')
 from matplotlib import pyplot as plt
 
 
-def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
-    """
-    Function to animate the tractor trailer along the path found by the algorithm.
-    :param path: Path object, output from the trailer_hybrid_a_star.calc_hybrid_astar_path function
-    :param oox: list, x coordinates of obstacles
-    :param ooy: list, y coordinates of obstacles
-    :param sx: float, starting x coordinate
-    :param sy: float, starting y coordinate
-    :param syaw0: float, starting tractor angle
-    :param syaw1: float, starting trailer angle
-    :param gx: float, goal x coordinate
-    :param gy: float, goal y coordinate
-    :param gyaw0: float, goal tractor angle
-    :param gyaw1: float, goal traier angle
-    :return: a pretty animation
-    """
-    # Plot the obstacles, start, and goal
-    plt.plot(oox, ooy, ".k")
-    trailer_hybrid_a_star.trailerlib.plot_trailer(sx, sy, syaw0, syaw1, 0)
-    trailer_hybrid_a_star.trailerlib.plot_trailer(gx, gy, gyaw0, gyaw1, 0)
-
-    # Form the lists containing the path information
-    x = path.x
-    y = path.y
-    yaw = path.yaw
-    yaw1 = path.yaw1
-    direction = path.direction
-
-    steer = 0
-
-    # Plot the path
-    for ii in range(x):
-        plt.cla()
-        plt.plot(oox, ooy, ".k")
-        plt.plot(x, y, "-r", label="Hybrid A* path")
-
-        if ii < len(x)-1:  # Not the last point in the path
-            k = (yaw[ii + 1] - yaw[ii])/trailer_hybrid_a_star.MOTION_RESOLUTION
-            if not direction[ii]:  # If going backward
-                k*= -1
-            steer = math.atan2(trailer_hybrid_a_star.WB*k, 1)
-        else:
-            steer = 0
-        trailer_hybrid_a_star.trailerlib.plot_trailer(x[ii], y[ii], yaw[ii], yaw1[ii], steer)
-        plt.grid(True)
-        plt.axis("equal")
-        time.sleep(0.0001)
-
-
 def main():
     """
     Function to fully execute a given scenario.
@@ -113,6 +64,63 @@ def main():
 
     # Animate Path
     show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1)
+
+
+
+def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
+    """
+    Function to animate the tractor trailer along the path found by the algorithm.
+    :param path: Path object, output from the trailer_hybrid_a_star.calc_hybrid_astar_path function
+    :param oox: list, x coordinates of obstacles
+    :param ooy: list, y coordinates of obstacles
+    :param sx: float, starting x coordinate
+    :param sy: float, starting y coordinate
+    :param syaw0: float, starting tractor angle
+    :param syaw1: float, starting trailer angle
+    :param gx: float, goal x coordinate
+    :param gy: float, goal y coordinate
+    :param gyaw0: float, goal tractor angle
+    :param gyaw1: float, goal traier angle
+    :return: a pretty animation
+    """
+    # Plot the obstacles, start, and goal
+    plt.plot(oox, ooy, ".k")
+    trailer_hybrid_a_star.trailerlib.plot_trailer(sx, sy, syaw0, syaw1, 0)
+    trailer_hybrid_a_star.trailerlib.plot_trailer(gx, gy, gyaw0, gyaw1, 0)
+
+    # Form the lists containing the path information
+    x = path.x
+    y = path.y
+    yaw = path.yaw
+    yaw1 = path.yaw1
+    direction = path.direction
+
+    steer = 0
+
+    # Plot the path
+    plt.ion()
+    plt.show()
+    for ii in range(1, len(yaw1)-1):
+        plt.cla()
+        plt.plot(oox, ooy, ".k")
+        plt.plot(x, y, "-r", label="Hybrid A* path")
+
+        if ii < len(x)-1:  # Not the last point in the path
+            k = (yaw[ii + 1] - yaw[ii])/trailer_hybrid_a_star.MOTION_RESOLUTION
+            if not direction[ii]:  # If going backward
+                k*= -1
+            steer = math.atan2(trailer_hybrid_a_star.WB*k, 1)
+        else:
+            steer = 0
+        trailer_hybrid_a_star.trailerlib.plot_trailer(x[ii], y[ii], yaw[ii], yaw1[ii], steer)
+        plt.grid(True)
+        plt.axis("equal")
+        plt.draw()
+        plt.pause(.001)
+        # time.sleep(0.0001)
+
+
+
 
 # Executed code
 main()
