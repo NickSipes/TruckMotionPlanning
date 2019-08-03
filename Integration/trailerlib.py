@@ -110,8 +110,8 @@ def calc_trailer_yaw_from_xyyaw(x, y, yaw, init_tyaw, steps):
 def trailer_motion_model(x, y, yaw0, yaw1, D, d, L, delta):
     x += D * math.cos(yaw0)
     y += D * math.sin(yaw0)
-    yaw0 += D / (L * math.tan(delta))
-    yaw1 += D / (d * math.sin(yaw0 - yaw1))
+    yaw0 += (D / L) * math.tan(delta)
+    yaw1 += (D / d) * math.sin(yaw0 - yaw1)
 
     return x, y, yaw0, yaw1
 
