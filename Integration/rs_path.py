@@ -689,7 +689,7 @@ def generate_local_course(L, lengths, mode, maxc, step_size):
         ox, oy, oyaw = px[ind], py[ind], pyaw[ind]
 
         ind -= 1
-        if i >= 2 and (lengths[i-1]*lengths[i]) > 0:
+        if i >= 1 and (lengths[i-1]*lengths[i]) > 0:
             pd = -d - ll
         else:
             pd = d - ll
@@ -702,8 +702,8 @@ def generate_local_course(L, lengths, mode, maxc, step_size):
         ll = l - pd - d  # remaining length
 
         ind += 1
-
-        px, py, pyaw, directions = interpolate(ind, l, m, maxc, ox, oy, oyaw, px, py, pyaw, directions)
+        if ind <= len(px) - 1:
+            px, py, pyaw, directions = interpolate(ind, l, m, maxc, ox, oy, oyaw, px, py, pyaw, directions)
 
     while px[-1] == 0:
         px.pop(-1)
