@@ -14,6 +14,7 @@ def main():
     Function to fully execute a given scenario.
     :return:
     """
+    print('Start!!')
     # Initial State
     sx = 14  # Starting x (m)
     sy = 10  # Starting y (m)
@@ -23,8 +24,8 @@ def main():
     # Goal State
     gx = 0  # Goal x (m)
     gy = 0  # Goal y (m)
-    gyaw0 = math.radians(0)  # Goal tractor angle (rad)
-    gyaw1 = math.radians(0)  # Goal trailer angle (rad)
+    gyaw0 = math.radians(90)  # Goal tractor angle (rad)
+    gyaw1 = math.radians(90)  # Goal trailer angle (rad)
 
     # Obstacles
 
@@ -53,7 +54,7 @@ def main():
 
     for i in range(-4, 4):  # Wall from (-4, -15) to (4, -15)
         ox.append(i)
-        oy.append(15)
+        oy.append(-15)
 
     oox = ox[:]
     ooy = oy[:]
@@ -63,8 +64,9 @@ def main():
     path = trailer_hybrid_a_star.calc_hybrid_astar_path(sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1, ox, oy, trailer_hybrid_a_star.XY_GRID_RESOLUTION, trailer_hybrid_a_star.YAW_GRID_RESOLUTION)
 
     # Animate Path
+    print('Displaying Animation...')
     show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1)
-
+    print('Done!!')
 
 
 def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
@@ -117,9 +119,6 @@ def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
         plt.axis("equal")
         plt.draw()
         plt.pause(.001)
-        # time.sleep(0.0001)
-
-
 
 
 # Executed code

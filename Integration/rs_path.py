@@ -95,7 +95,6 @@ def calc_tau_omega(u, v, xi, eta, phi):
     return tau, omega
 
 
-#  TODO changed entire pi_2_pi function to handle lists
 def pi_2_pi(angles):
     """
 
@@ -304,7 +303,7 @@ def LRSLR(x, y, phi):
     if rho >= 2:
         u = 4 - math.sqrt(rho**2 - 4)
         if u <= 0:
-            t = mod2pi(math.atan2((4-u)*xi - 2*eta, -2*xi + (u - 4)*eta))  # TODO fixed parenthesis error
+            t = mod2pi(math.atan2((4-u)*xi - 2*eta, -2*xi + (u - 4)*eta))
             v = mod2pi(t - phi)
 
             if t >= 0 and v >= 0:
@@ -367,7 +366,7 @@ def SCS(x, y, phi, paths):
     flag, t, u, v = SLS(x, y, phi)
 
     if flag:
-        paths = set_path(paths, [t, u, v], ["S", "L", "S"])  # TODO fixed lower case s
+        paths = set_path(paths, [t, u, v], ["S", "L", "S"])
 
     flag, t, u, v = SLS(x, -y, -phi)
 
@@ -703,7 +702,8 @@ def generate_local_course(L, lengths, mode, maxc, step_size):
 
         ind += 1
 
-        px, py, pyaw, directions = interpolate(ind, l, m, maxc, ox, oy, oyaw, px, py, pyaw, directions)
+        if ind <= len(px) - 1:
+            px, py, pyaw, directions = interpolate(ind, l, m, maxc, ox, oy, oyaw, px, py, pyaw, directions)
 
     while px[-1] == 0:
         px.pop(-1)

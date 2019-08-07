@@ -107,6 +107,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
     # input to kd.create
 
     # forms a kd tree from the xy points of the obstacles
+    print('Forming Obstacle KD Tree...')
     kdtree = spatial.KDTree(oxy)
 
     # Form the configuration space
@@ -121,6 +122,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
                  [True], 0, 0, -1)
 
     # Determine holonomic costs of each xy coordinate on the grid (numpy dependent)
+    print('Calculating Holonomic Costs...')
     h_dp = calc_holonomic_with_obstacle_heuristics(ngoal, ox, oy, xyreso)
 
     opened = {}    # Dictionary to hold open nodes
@@ -136,8 +138,13 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
 
     u, d = calc_motion_inputs()
     nmotion = len(u)
+    iteration = 1
 
+    print('Commencing Hybrid A* Search...')
     while True:
+        if iteration % 10 == 0:
+            print(f'{iteration} loops complete. {len(opened)} nodes opened.  {len(closed)} nodes closed.')
+        iteration += 1
 
         # Exit while loop and return nothing if open is expended and a solution is not found
         if not opened:
@@ -145,7 +152,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
             return []
 
         # Obtain the index of the next node
-        c_id = min(pq.keys())  # TODO fixed syntax
+        c_id = min(pq.keys())
 
         # Removed the obtained index from the queue
         pq.pop(c_id)
@@ -160,11 +167,11 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
         # get full data of current node and isupdated flag
         isupdated, fpath = update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw1)
 
-        if isupdated: # goal has been found
+        if isupdated:  # goal has been found
             fnode = fpath
             break  # exit the while loop
 
-        inityaw1 = current.yaw1[0]  # TODO fixed index error
+        inityaw1 = current.yaw1[0]
 
         # cycle through all inputs and check if each next node is in closed, else add it to open if not already there
         for i in range(nmotion):
@@ -187,7 +194,7 @@ def calc_hybrid_astar_path(sx, sy, syaw, syaw1, gx, gy, gyaw, gyaw1, ox, oy, xyr
                     # lower, update the node in open
                     opened[node_ind] = node
 
-    print(f"number of nodes in open and closed = {len(opened) + len(closed)}")
+    print('Forming Final Path...')
 
     path = get_final_path(closed, fnode, nstart, c)
 
@@ -282,7 +289,7 @@ def calc_cost(n, h_dp, c):
     :param c: Config, Cspace
     :return: total cost of the current node
     """
-    return n.cost + H_COST*h_dp[n.xind - c.minx][n.yind - c.miny]  # TODO fixed indexing syntax
+    return n.cost + H_COST*h_dp[n.xind - c.minx][n.yind - c.miny]
 
 
 def calc_motion_inputs():
@@ -313,7 +320,7 @@ def calc_motion_inputs():
         d.append(-1)
 
     # append u to u so when indexed, each steering input pairs with both a forward and back driving input
-    u.extend(u)  # TODO fixed (old syntax was an infinite loop)
+    u.extend(u)
 
     return u, d
 
@@ -333,23 +340,25 @@ def update_node_with_analystic_expantion(current, ngoal, c, ox, oy, kdtree, gyaw
 
     apath = analystic_expantion(current, ngoal, c, ox, oy, kdtree)
 
-    # Formulate data for the "f" node
+    # Formulate data for the final node
     if apath:  # if apath = [], skip the if statement since there is no path (ignore the unresolved attribute reference
         # errors as they won't happen since apath is only a list if it is empty and then the if statement is false and
         # the block doesn't execute)
-        fx = apath.x[2:-1]
-        fy = apath.y[2:-1]
-        fyaw = apath.yaw[2:-1]
-        steps = [MOTION_RESOLUTION*direct for direct in apath.directions]  # TODO fixed element wise multiplication
+        fx = apath.x[1:-1]
+        fy = apath.y[1:-1]
+        fyaw = apath.yaw[1:-1]
+        steps = [MOTION_RESOLUTION*direct for direct in apath.directions]
         yaw1 = trailerlib.calc_trailer_yaw_from_xyyaw(apath.x, apath.y, apath.yaw, current.yaw1[-1], steps)
         # check if the trailer yaw is outside the trailer yaw threshold
         if abs(rs_path.pi_2_pi(yaw1[-1] - gyaw1)) >= GOAL_TYAW_TH:
-            return False, []  # current node is not the goal node based on trailer alone
+            return False, []  # current node is not the goal node based on trailer
+        if abs(fx[-1] - ngoal.x[-1]) >= XY_GRID_RESOLUTION or abs(fy[-1] - ngoal.y[-1]) >= XY_GRID_RESOLUTION:
+            return False, []  # current node is not the goal node based on xy location
         fcost = current.cost + calc_rs_path_cost(apath, yaw1)  # cost to next node
-        fyaw1 = yaw1[2:-1] # array of trailer yaws
+        fyaw1 = yaw1[1:-1] # array of trailer yaws
         fpind = calc_index(current, c)  # index of parent node
         fd = []  # array of directions
-        for d in apath.directions[2:-1]:
+        for d in apath.directions[1:-1]:
             if d >= 0:
                 fd.append(True)
             else:
@@ -397,22 +406,22 @@ def analystic_expantion(n, ngoal, c, ox, oy, kdtree):
 
     # Put the rs path and yaw1 combinations into pathqueue
     for path in paths:
-        steps = [MOTION_RESOLUTION*direct for direct in path.directions]  # TODO fixed element wise multiplication
+        steps = [MOTION_RESOLUTION*direct for direct in path.directions]
         yaw1 = trailerlib.calc_trailer_yaw_from_xyyaw(path.x, path.y, path.yaw, n.yaw1[-1], steps)
         pathqueue.update({path: calc_rs_path_cost(path, yaw1)})
 
     # Go through each path, starting with the lowest cost, and check for collisions, return the first viable path
     for i in range(len(pathqueue)):
-        for path_key, path_value in pathqueue.items():  # extract path with lowest cost TODO changed since old syntax did not work for a dictionary (this line + 3 are new)
+        for path_key, path_value in pathqueue.items():  # extract path with lowest cost
             if path_value == min(pathqueue.values()):
                 path = path_key
                 break
         pathqueue.pop(path)  # remove the lowest cost path from the queue
 
-        steps = [MOTION_RESOLUTION*direct for direct in path.directions]  # TODO fixed element wise multiplication
+        steps = [MOTION_RESOLUTION*direct for direct in path.directions]
         yaw1 = trailerlib.calc_trailer_yaw_from_xyyaw(path.x, path.y, path.yaw, n.yaw1[-1], steps)
         ind = [i for i in np.arange(1, len(path.x), SKIP_COLLISION_CHECK)]
-        path_x = [path.x[i] for i in ind]  # TODO added this and following 4 lines to correctly form list inputs to the collision checker
+        path_x = [path.x[i] for i in ind]
         path_y = [path.y[i] for i in ind]
         path_yaw = [path.yaw[i] for i in ind]
         path_yaw1 = [yaw1[i] for i in ind]
@@ -458,15 +467,15 @@ def calc_rs_path_cost(rspath, yaw1):
             ulist.append(-MAX_STEER)
         elif rspath.ctypes[i] == "L":
             ulist.append(MAX_STEER)
-        else:  # TODO I added this else statement because ulist was initialized as empty vice an array of zeros
+        else:
             ulist.append(0)
 
     # Update cost for changing direction of turn
-    for i in range(nctypes - 2):  # TODO fixed max index value (changed from -1 to -2)
+    for i in range(nctypes - 2):
         cost += STEER_CHANGE_COST*abs(ulist[i+1] - ulist[i])
 
     # Update cost to prevent jackknifes (the most the trailer folds toward the truck, the higher the cost)
-    cost += JACKKNIF_COST*sum(np.absolute(rs_path.pi_2_pi(rspath.yaw-yaw1)))  # TODO changed to np.absolute to allow element wise operation
+    cost += JACKKNIF_COST*sum(np.absolute(rs_path.pi_2_pi(np.subtract(rspath.yaw, yaw1))))
 
     return cost
 
@@ -526,7 +535,7 @@ def calc_next_node(current, c_id, u, d, c):
     addedcost += STEER_CHANGE_COST*abs(current.steer - u)
 
     # Cost of acute angle between trailer and tractor
-    addedcost += JACKKNIF_COST*sum(np.absolute(rs_path.pi_2_pi(np.subtract(yawlist, yaw1list))))  # TODO changed to np.absolute and np.subtract to allow element wise operation
+    addedcost += JACKKNIF_COST*sum(np.absolute(rs_path.pi_2_pi(np.subtract(yawlist, yaw1list))))
 
     cost = current.cost + addedcost
 
@@ -562,10 +571,10 @@ def verify_index(node, c, ox, oy, inityaw1, kdtree):
         return False
 
     # Check if the node collides with an obstacle
-    steps = [MOTION_RESOLUTION*direct for direct in node.directions]  # TODO fixed element wise multiplication
+    steps = [MOTION_RESOLUTION*direct for direct in node.directions]
     yaw1 = trailerlib.calc_trailer_yaw_from_xyyaw(node.x, node.y, node.yaw, inityaw1, steps)
     ind = [i for i in np.arange(1, len(node.x), SKIP_COLLISION_CHECK)]
-    node_x = [node.x[i] for i in ind]  # TODO added this and following 4 lines to correctly form list inputs to the collision checker
+    node_x = [node.x[i] for i in ind]
     node_y = [node.y[i] for i in ind]
     node_yaw = [node.yaw[i] for i in ind]
     node_yaw1 = [yaw1[i] for i in ind]
@@ -587,13 +596,14 @@ def get_final_path(closed, ngoal, nstart, c):
     """
 
     # Initialize recursive list of path parameters
-    rx = ngoal.x.copy()  # TODO edited reverse statements to correctly save the array to rx, ry, ryaw, and directions
+    rx = ngoal.x.copy()
     rx.reverse()
     ry = ngoal.y.copy()
     ry.reverse()
     ryaw = ngoal.yaw.copy()
     ryaw.reverse()
-    ryaw1 = np.flip(ngoal.yaw1)  # TODO fixed "reverse" since yaw1 is a nparray, not list
+    ryaw1 = ngoal.yaw1.copy()
+    ryaw1.reverse()
     direction = ngoal.directions.copy()
     direction.reverse()
     nid = ngoal.pind
@@ -602,7 +612,7 @@ def get_final_path(closed, ngoal, nstart, c):
     # Form recursive list of path parameters
     while True:
         n = closed[nid]
-        rx_temp = n.x.copy()  # TODO Fixed reverse and appened statements for rx, ry, ryaw, ryaw1, and direction
+        rx_temp = n.x.copy()
         rx_temp.reverse()
         rx.extend(rx_temp)
         ry_temp = n.y.copy()
@@ -611,7 +621,9 @@ def get_final_path(closed, ngoal, nstart, c):
         ryaw_temp = n.yaw.copy()
         ryaw_temp.reverse()
         ryaw.extend(ryaw_temp)
-        np.append(ryaw1, np.flip(n.yaw1))
+        ryaw1_temp = n.yaw1.copy()
+        ryaw1_temp.reverse()
+        ryaw1.extend(ryaw1_temp)
         direction_temp = n.directions.copy()
         direction_temp.reverse()
         direction.extend(direction_temp)

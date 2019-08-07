@@ -3,17 +3,14 @@
 #
 # RBE 550: Motion Planning
 # 
-import matplotlib
+
 import math
 from scipy import spatial
 from nodeObject import node
-matplotlib.use('GTK3Agg')
-from matplotlib import pyplot
 
 
 def calculate_dist_policy(goalX, goalY, obstacleX, obstacleY, gridResolution, vehicleRadius):
 
-	# TODO added round, x and y values are expected to be integers based on calc_policy_map (verified in source file)
 	goalNode = node(round(goalX / gridResolution), round(goalY / gridResolution), 0, -1)
 
 	# Using a list
@@ -38,16 +35,15 @@ def calculate_dist_policy(goalX, goalY, obstacleX, obstacleY, gridResolution, ve
 
 	# Meat of the method
 	while True:
-		print('Running')
 		if len(openList) == 0:
-			print('Search is done')
+
 			break
 
 		# Set current node to one with maximum key value
 		currentKey 	= max(pq.keys())
-		pq.pop(currentKey)  # TODO removal of currentkey from pq (verified in source file)
+		pq.pop(currentKey)
 		currentNode = openList.pop(currentKey)
-		closedList[currentKey] = currentNode  # TODO add currentNode to closedList (verified in source file)
+		closedList[currentKey] = currentNode
 
 		# Expand search grid based on motion model
 		for i in range(numberOfMotions - 1):
@@ -91,12 +87,11 @@ def calculate_dist_policy(goalX, goalY, obstacleX, obstacleY, gridResolution, ve
 def calc_policy_map(closedList, xWidth, yWidth, minX, minY):
 
 	# Create an array of dimension xWidth by Ywidth filled with values of infinity
-	# TODO swapped x and y to match dimensions of obstacleMap
 	pmap = [[math.inf for j in range(yWidth)] for i in range(xWidth)]
 
 	# Iterate through the dictionary items in the closed list
 	for value in closedList.values():
-		pmap[value.getX() - minX][value.getY() - minY] = value.getCost()  # TODO fixed indexing syntax
+		pmap[value.getX() - minX][value.getY() - minY] = value.getCost()
 
 	return pmap
 
@@ -205,7 +200,7 @@ def verify_node(node, minX, minY, xWidth, yWidth, obstacleMap):
 	# ***
 
 	# Check if the node is colliding with an obstacle
-	if obstacleMap[int(node.getX() - minX)][int(node.getY() - minY)]:  #TODO changed x y order (verified with source file)
+	if obstacleMap[int(node.getX() - minX)][int(node.getY() - minY)]:
 		return False
 
 	# Node has been successfuly verified
@@ -214,7 +209,7 @@ def verify_node(node, minX, minY, xWidth, yWidth, obstacleMap):
 
 # Calculate the cost of the node
 def calc_cost(node, goalNode):
-	return (node.getCost() + heuristic_cost(node.getX() - goalNode.getX(), node.getY() - goalNode.getY()))
+	return node.getCost() + heuristic_cost(node.getX() - goalNode.getX(), node.getY() - goalNode.getY())
 
 
 # Return the motion model of the tractor-trailer
@@ -241,14 +236,14 @@ def calc_index(node, xWidth, minX, minY):
 
 def calc_obstacle_map(obstacleX, obstacleY, gridResolution, vehicleRadius):
 
-	# Get obstacle bounds TODO added round to 4 following lines (caused incorrect index calculations by calc_index)
+	# Get obstacle bounds
 	minX = round(min(obstacleX))
 	minY = round(min(obstacleY))
 	maxX = round(max(obstacleX))
 	maxY = round(max(obstacleY))
 
-	xWidth = round(maxX - minX)  # TODO added round (caused index errors in verify_node, verified against source file)
-	yWidth = round(maxY - minY)  # TODO added round (caused index errors in verify_node, verified against source file)
+	xWidth = round(maxX - minX)
+	yWidth = round(maxY - minY)
 
 	# Create a 2D list where each element is False
 	obstacleMap = [[False for j in range(int(yWidth))] for i in range(int(xWidth))]

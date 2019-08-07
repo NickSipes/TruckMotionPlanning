@@ -42,12 +42,10 @@ def check_collision(x, y, yaw, kdtree, ox, oy, wbd, wbr, vrx, vry):
         cy = iy + wbd*math.sin(iyaw)
 
         # collision check for whole bubble
-        # this is dependent on some function called inrange.jl which is one of the source files
-        # in NearestNeighbors.jl
         ids = kdtree.query_ball_point((cx, cy), wbr)
         if len(ids) == 0:
             continue
-        ox_check = [ox[i] for i in ids]  # TODO fix index error (was using a list as an index, cahnged this line + 2)
+        ox_check = [ox[i] for i in ids]
         oy_check = [oy[i] for i in ids]
         if not rect_check(ix, iy, iyaw, ox_check, oy_check, vrx, vry):    # need to check if syntax is correct
             return False    # this means there is a collision
@@ -96,11 +94,11 @@ def rect_check(ix, iy, iyaw, ox, oy, vrx, vry):
 
 # this calculates the trailer yaw from the x, y, yaw lists
 def calc_trailer_yaw_from_xyyaw(x, y, yaw, init_tyaw, steps):
-    tyaw = np.zeros(len(x))
-    tyaw[0] = init_tyaw  # TODO fixed index error (start at 0 vs 1)
+    tyaw = [0]*len(x)
+    tyaw[0] = init_tyaw
 
-    for i in range(2, len(x)):
-        tyaw[i] += (tyaw[i - 1] + steps[i - 1]) / LT * math.sin(yaw[i - 1] - tyaw[i - 1])  # TODO fixed parenthesis error
+    for i in range(1, len(x)):
+        tyaw[i] = tyaw[i - 1] + (steps[i - 1] * math.sin(yaw[i - 1] - tyaw[i - 1])) / LT
 
     return tyaw
 
@@ -116,43 +114,34 @@ def trailer_motion_model(x, y, yaw0, yaw1, D, d, L, delta):
     return x, y, yaw0, yaw1
 
 
-# this checks for trailer collision using KDTree.jl function which is one of the source files
-# in NearestNeighbors.jl
 def check_trailer_collision(ox, oy, x, y, yaw0, yaw1, kdtree):
     if kdtree is None:
-        kdtree = spatial.KDTree([np.conj(ox), np.conj(oy)])     #not sure if this is set up properly for kdtree, also see julia code for transpose syntax '
+        kdtree = spatial.KDTree([np.conj(ox), np.conj(oy)])
 
     vrxt = np.array([LTF, LTF, -LTB, -LTB, LTF])
     vryt = np.array([(-W/2.0), (W/2.0), (W/2.0), (-W/2.0), (-W/2.0)])
 
     # these are bubble parameters
-    DT = (LTF + LTB) / 2.0 - LTB    # need to review order of operations
-    DTR = (LTF + LTB) / 2.0 + 0.3   # need to review order of operations
+    DT = (LTF + LTB) / 2.0 - LTB
+    DTR = (LTF + LTB) / 2.0 + 0.3
 
     # check for trailer collision
-    if not check_collision(x, y, yaw1, kdtree, ox, oy, DT, DTR, vrxt, vryt):    # need to verify if syntax is correct
+    if not check_collision(x, y, yaw1, kdtree, ox, oy, DT, DTR, vrxt, vryt):
         return False    # there is collision
 
     vrxf = np.array([LF, LF, -LB, LF])
     vryf = np.array([(-W/2.0), (W/2.0), (W/2.0), (-W/2.0), (-W/2.0)])
 
     # these are bubble parameters
-    DF = (LF + LB) / 2.0 - LB       # need to review order of operations
-    DFR = (LF + LB) / 2.0 + 0.3     # need to review order of operations
+    DF = (LF + LB) / 2.0 - LB
+    DFR = (LF + LB) / 2.0 + 0.3
 
-    # check for front trailer collision
-    # but i think this is checking for truck collision
-    if not check_collision(x, y, yaw0, kdtree, ox, oy, DF, DFR, vrxf, vryf):    # need to verify if syntax is correct
+    if not check_collision(x, y, yaw0, kdtree, ox, oy, DF, DFR, vrxf, vryf):
         return False    # there is collision
 
     return True     # there is no collision
 
 
-# this creates the arrays that hold the values for plotting
-# not sure if the structures for the arrays are correct
-# need to double-check the order of operations for some of the calcs
-# also, julia uses .+= for element-wise additions, but python does not
-# need the . right?
 def plot_trailer(x, y, yaw, yaw1, steer):
     truckcolor = '-k'   # need to verify if syntax is correct
 
@@ -238,7 +227,7 @@ def plot_trailer(x, y, yaw, yaw1, steer):
     plt.plot(tr_wheel[0, :], tr_wheel[1, :], truckcolor)
     plt.plot(tl_wheel[0, :], tl_wheel[1, :], truckcolor)
 
-    plt.plot([x, y, "*"])
+    plt.plot(x, y, "*")
     plt.axis('equal')
 
 

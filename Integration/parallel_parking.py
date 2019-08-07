@@ -2,20 +2,17 @@
 import trailer_hybrid_a_star
 import matplotlib
 import math
-import time
 matplotlib.use('GTK3Agg')
 from matplotlib import pyplot as plt
 
-# include("../src/trailer_hybrid_a_star.jl")
 
 def main():
-    # print ("start!!", PROGRAM_FILE)
     print("Start!!")
 
     # initial state
     sx = -15.0  # [m]
     sy = 8.0  # [m]
-    syaw0 = math.radians(0)  # TODO changed to a normal parallel parking example (if 180, truck has to perform turn)
+    syaw0 = math.radians(0)
     syaw1 = math.radians(0)
 
     # goal state
@@ -52,23 +49,30 @@ def main():
         ox.append(-10.0)
         oy.append(i)
 
+    for i in range(5, 15):
+        ox.append(-25)
+        oy.append(i)
+
+    for i in range(5, 15):
+        ox.append(25)
+        oy.append(i)
+
     oox = ox[:]
     ooy = oy[:]
-    # plt.plot(oox, ooy, ".k")  # TODO fixed syntax plot commands (useful for verifying points)
+    # plt.plot(oox, ooy, ".k")
     # plt.axis("equal")
     # plt.show()
 
     # path generation
-    # nor sure what to do with @time, so took it out from path below
     path = trailer_hybrid_a_star.calc_hybrid_astar_path(sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1, ox, oy,
                                                         trailer_hybrid_a_star.XY_GRID_RESOLUTION,
                                                         trailer_hybrid_a_star.YAW_GRID_RESOLUTION)
 
     # ====Animation=====
+    print('Displaying Animation...')
     show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1)
 
     print("Done!!")
-    # print("Done!!", PROGRAM_FILE)
 
 
 def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
@@ -81,10 +85,9 @@ def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
     yaw1 = path.yaw1
     direction = path.direction
 
-    steer = 0.0
-    plt.ion()  # TODO updated/added several lines to get the image to show and update
+    plt.ion()
     plt.show()
-    for ii in range(1, len(yaw1)-1):  # TODO yaw1 is shorter than rest... therefore something is wrong
+    for ii in range(1, len(yaw1)-1):
         plt.cla()
         plt.plot(oox, ooy, ".k")
         plt.plot(x, y, "-r", label="Hybrid A* path")
@@ -104,4 +107,4 @@ def show_animation(path, oox, ooy, sx, sy, syaw0, syaw1, gx, gy, gyaw0, gyaw1):
         plt.pause(.001)
 
 
-main()  # TODO moved show_animation above main, else it wasn't defined.
+main()
